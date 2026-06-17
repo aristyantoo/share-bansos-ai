@@ -1,0 +1,192 @@
+---
+import { type CollectionEntry, getCollection } from 'astro:content';
+import { render } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ToolLogo from '../../components/ToolLogo.astro';
+
+export async function getStaticPaths() {
+	const tools = await getCollection('tools');
+	return tools.map((tool) => ({
+		params: { slug: tool.id },
+		props: { tool },
+	}));
+}
+type Props = {
+	tool: CollectionEntry<'tools'>;
+};
+
+const { tool } = Astro.props;
+const { Content } = await render(tool);
+
+// Get related tools (same category, excluding current tool)
+const allTools = await getCollection('tools');
+const relatedTools = allTools
+	.filter((t) => t.id !== tool.id && t.data.category === tool.data.category)
+	.slice(0, 2);
+---
+
+<!doctype html>
+<html lang="id">
+	<head>
+		<BaseHead title={`${tool.data.name} - Share Bansos AI`} description={tool.data.description} />
+		<style>
+			.tool-header-area {
+				display: flex;
+				align-items: center;
+				gap: 20px;
+				margin-bottom: 2rem;
+			}
+			.tool-detail-logo {
+				width: 72px;
+				height: 72px;
+				border-radius: 16px;
+				border: 2px solid var(--color-accent);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 2.2rem;
+				font-weight: bold;
+				background: #FAF2EA;
+			}
+			.tool-detail-logo svg {
+				width: 38px;
+				height: 38px;
+			}
+			.tool-meta-title h1 {
+				margin: 0;
+				line-height: 1;
+			}
+			.tool-meta-title p {
+				margin: 5px 0 0 0;
+				font-size: 1.1rem;
+				opacity: 0.8;
+			}
+			.stat-item {
+				margin-bottom: 1.2rem;
+			}
+			.stat-item:last-child {
+				margin-bottom: 0;
+			}
+			.stat-label {
+				font-size: 0.8rem;
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+				opacity: 0.7;
+				margin-bottom: 2px;
+			}
+			.stat-value {
+				font-size: 1.1rem;
+				font-weight: 700;
+			}
+			.related-title {
+				font-family: var(--font-heading);
+				font-size: 1.8rem;
+				margin-bottom: 1rem;
+			}
+			.related-list {
+				display: flex;
+				flex-direction: column;
+				gap: 15px;
+			}
+			.related-item {
+				border: 2px solid var(--color-accent);
+				border-radius: 12px;
+				padding: 12px;
+				background: #FAF2EA;
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				transition: transform 0.15s ease;
+			}
+			.related-item:hover {
+				transform: translate(-2px, -2px);
+				box-shadow: 2px 2px 0px var(--color-accent);
+			}
+			.related-logo {
+				width: 36px;
+				height: 36px;
+				border-radius: 8px;
+				border: 2px solid var(--color-accent);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 1.2rem;
+				font-weight: bold;
+				background: #fff;
+			}
+			.related-logo svg {
+				width: 20px;
+				height: 20px;
+			}
+			.related-name {
+				font-weight: 700;
+				font-size: 1rem;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<div class="detail-container">
+				<article class="detail-main">
+					<div class="tool-header-area">
+						<div class="tool-detail-logo" style={tool.data.accentColor ? `border-color: ${tool.data.accentColor}; background-color: ${tool.data.accentColor}10` : ''}>
+							<ToolLogo name={tool.data.name} style={tool.data.accentColor ? `color: ${tool.data.accentColor}` : ''} />
+						</div>
+						<div class="tool-meta-title">
+							<h1>{tool.data.name}</h1>
+							<p><span data-i18n="tools.creator">By</span> {tool.data.creator}</p>
+						</div>
+					</div>
+					<div class="prose">
+						<Content />
+					</div>
+				</article>
+
+				<aside class="detail-sidebar">
+					<div class="sidebar-card">
+						<div class="stat-item">
+							<div class="stat-label" data-i18n="detail.category">Category</div>
+							<div class="stat-value">{tool.data.category}</div>
+						</div>
+						<div class="stat-item">
+							<div class="stat-label" data-i18n="detail.pricing">Pricing</div>
+							<div class="stat-value">{tool.data.price}</div>
+						</div>
+						<div class="stat-item">
+							<div class="stat-label" data-i18n="detail.highlight">Key Highlight</div>
+							<div class="stat-value">
+								<span class="lang-id">{tool.data.value}</span>
+								<span class="lang-en">{tool.data.valueEn}</span>
+							</div>
+						</div>
+					</div>
+
+					<a href={tool.data.url} target="_blank" class="action-btn">
+						<span class="lang-id">Kunjungi Situs Web {tool.data.name} ↗</span>
+						<span class="lang-en">Visit {tool.data.name} Website ↗</span>
+					</a>
+
+					{relatedTools.length > 0 && (
+						<div class="sidebar-card">
+							<h3 class="related-title" data-i18n="detail.related">Related Tools</h3>
+							<div class="related-list">
+								{relatedTools.map((t) => (
+									<a href={`/tools/${t.id}/`} class="related-item">
+										<div class="related-logo" style={t.data.accentColor ? `border-color: ${t.data.accentColor}; background-color: ${t.data.accentColor}10` : ''}>
+											<ToolLogo name={t.data.name} style={t.data.accentColor ? `color: ${t.data.accentColor}` : ''} />
+										</div>
+										<div class="related-name">{t.data.name}</div>
+									</a>
+								))}
+							</div>
+						</div>
+					)}
+				</aside>
+			</div>
+		</main>
+		<Footer />
+	</body>
+</html>

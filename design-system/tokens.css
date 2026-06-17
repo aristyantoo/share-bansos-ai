@@ -1,0 +1,25 @@
+:root {
+  --color-accent: #0a2540;
+  --font-heading: 'Caveat', cursive, sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --space-1: 1px;
+  --space-2: 4.232px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 9px;
+  --space-6: 10px;
+  --space-7: 12px;
+  --space-8: 16px;
+  --space-9: 20px;
+  --space-10: 24px;
+  --space-11: 25px;
+  --space-12: 28px;
+  --space-13: 30px;
+  --space-14: 44px;
+  --space-15: 45px;
+  --space-16: 50px;
+  --space-17: 54px;
+  --space-18: 64px;
+  --space-19: 68px;
+  --space-20: 80px;
+}

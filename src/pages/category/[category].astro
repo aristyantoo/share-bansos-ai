@@ -1,0 +1,249 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ToolLogo from '../../components/ToolLogo.astro';
+
+export async function getStaticPaths() {
+	const tools = await getCollection('tools');
+
+	// Map of category → slug
+	const categorySlugMap: Record<string, string> = {
+		'Language Model': 'language-model',
+		'Image Generation': 'image-generation',
+		'Coding': 'coding',
+		'UI Design': 'ui-design',
+	};
+
+	const categoryMap = new Map<string, typeof tools>();
+	for (const tool of tools) {
+		const cat = tool.data.category;
+		if (!categoryMap.has(cat)) categoryMap.set(cat, []);
+		categoryMap.get(cat)!.push(tool);
+	}
+
+	return Array.from(categoryMap.entries()).map(([name, catTools]) => ({
+		params: {
+			category: categorySlugMap[name] ?? name.toLowerCase().replace(/\s+/g, '-'),
+		},
+		props: {
+			categoryName: name,
+			tools: catTools.sort((a, b) => {
+				if (a.data.featured && !b.data.featured) return -1;
+				if (!a.data.featured && b.data.featured) return 1;
+				return a.data.name.localeCompare(b.data.name);
+			}),
+		},
+	}));
+}
+
+const { categoryName, tools } = Astro.props;
+
+const categoryMeta: Record<string, { color: string; bgColor: string; icon: string; descId: string; descEn: string }> = {
+	'Language Model': {
+		color: '#F38C3B',
+		bgColor: '#FFF8F2',
+		icon: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+		descId: 'Model bahasa besar yang dapat memahami, menulis, dan bernalar layaknya manusia.',
+		descEn: 'Large language models that can understand, write, and reason like a human.',
+	},
+	'Image Generation': {
+		color: '#5865F2',
+		bgColor: '#F0F0FF',
+		icon: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>`,
+		descId: 'Ubah teks menjadi karya seni visual yang menakjubkan dalam hitungan detik.',
+		descEn: 'Transform text into stunning visual artwork in seconds.',
+	},
+	'Coding': {
+		color: '#5C54E5',
+		bgColor: '#F2F2FF',
+		icon: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
+		descId: 'Editor dan asisten AI yang membantu Anda menulis kode lebih cepat dan lebih baik.',
+		descEn: 'AI editors and assistants that help you write code faster and better.',
+	},
+	'UI Design': {
+		color: '#000000',
+		bgColor: '#F5F5F5',
+		icon: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>`,
+		descId: 'Rancang antarmuka pengguna indah langsung dari perintah teks.',
+		descEn: 'Design beautiful user interfaces directly from text prompts.',
+	},
+};
+
+const meta = categoryMeta[categoryName] ?? {
+	color: '#0a2540',
+	bgColor: '#FAF2EA',
+	icon: '',
+	descId: `Alat AI dalam kategori ${categoryName}.`,
+	descEn: `AI tools in the ${categoryName} category.`,
+};
+---
+
+<!doctype html>
+<html lang="id">
+	<head>
+		<BaseHead
+			title={`${categoryName} AI Tools — Share Bansos AI`}
+			description={`Explore the best ${categoryName} AI tools. ${meta.descEn}`}
+		/>
+		<style>
+			/* Category Hero Banner */
+			.cat-hero {
+				border: 2px solid var(--color-accent);
+				border-radius: 28px;
+				overflow: hidden;
+				box-shadow: 6px 6px 0px var(--color-accent);
+				margin-top: 2rem;
+				margin-bottom: 48px;
+			}
+
+			.cat-hero-bar {
+				height: 8px;
+			}
+
+			.cat-hero-body {
+				display: flex;
+				align-items: center;
+				gap: 28px;
+				padding: 36px 40px;
+			}
+
+			.cat-hero-icon {
+				width: 72px;
+				height: 72px;
+				border-radius: 18px;
+				border: 2px solid currentColor;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+			}
+
+			.cat-hero-text .back-link {
+				font-size: 0.75rem;
+				font-weight: 800;
+				text-transform: uppercase;
+				letter-spacing: 0.1em;
+				opacity: 0.5;
+				display: block;
+				margin-bottom: 8px;
+				color: var(--color-accent);
+				text-decoration: none;
+				transition: opacity 0.15s;
+			}
+
+			.cat-hero-text .back-link:hover {
+				opacity: 0.85;
+			}
+
+			.cat-hero-text h1 {
+				font-size: 2.8em;
+				margin: 0 0 8px 0;
+				line-height: 1.05;
+			}
+
+			.cat-hero-text p {
+				font-size: 1rem;
+				opacity: 0.7;
+				margin: 0;
+				max-width: 480px;
+				line-height: 1.55;
+			}
+
+			/* Tools Grid — reuse global card styles */
+			.tools-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+				gap: 28px;
+				padding-bottom: 80px;
+			}
+
+			/* Reuse card styles from global */
+			.tool-card {
+				position: relative;
+				background: #fff;
+				border: 2px solid var(--color-accent);
+				border-radius: 24px;
+				display: flex;
+				flex-direction: column;
+				box-shadow: 5px 5px 0px var(--color-accent);
+				transition: transform 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+				            box-shadow 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+			}
+
+			.tool-card:hover {
+				transform: translate(-3px, -3px);
+				box-shadow: 8px 8px 0px var(--color-accent);
+			}
+
+			@media (max-width: 720px) {
+				.cat-hero-body { flex-direction: column; align-items: flex-start; padding: 24px; }
+				.cat-hero-text h1 { font-size: 2em; }
+				.tools-grid { grid-template-columns: 1fr; gap: 20px; }
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<!-- Hero Banner -->
+			<div class="cat-hero">
+				<div class="cat-hero-bar" style={`background: ${meta.color};`}></div>
+				<div class="cat-hero-body" style={`background: ${meta.bgColor};`}>
+					<div class="cat-hero-icon" style={`color: ${meta.color}; border-color: ${meta.color};`}>
+						<Fragment set:html={meta.icon} />
+					</div>
+					<div class="cat-hero-text">
+						<a href="/category/" class="back-link">
+							<span class="lang-id">← Semua Kategori</span>
+							<span class="lang-en">← All Categories</span>
+						</a>
+						<h1 style={`color: ${meta.color};`}>{categoryName}</h1>
+						<p>
+							<span class="lang-id">{meta.descId} — {tools.length} alat tersedia.</span>
+							<span class="lang-en">{meta.descEn} — {tools.length} tools available.</span>
+						</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Tools Grid -->
+			<section class="tools-grid">
+				{tools.map((tool) => (
+					<div class="tool-card">
+						{tool.data.featured && <div class="featured-badge" data-i18n="tools.featured">Featured</div>}
+						<div class="tool-card-content">
+							<div class="tool-card-header">
+								<div class="tool-logo-container" style={tool.data.accentColor ? `border-color: ${tool.data.accentColor}; background-color: ${tool.data.accentColor}10` : ''}>
+									<ToolLogo name={tool.data.name} style={tool.data.accentColor ? `color: ${tool.data.accentColor}` : ''} />
+								</div>
+								<div class="tool-category-badge">{tool.data.category}</div>
+							</div>
+							<h3 class="tool-title">{tool.data.name}</h3>
+							<div class="tool-creator"><span data-i18n="tools.creator">By</span> {tool.data.creator}</div>
+							<p class="tool-description">
+								<span class="lang-id">{tool.data.description}</span>
+								<span class="lang-en">{tool.data.descriptionEn}</span>
+							</p>
+						</div>
+						<hr class="tool-card-divider" />
+						<div class="tool-card-footer">
+							<div class="tool-value-label">
+								<span class="tool-value-prefix" data-i18n="tools.value_prefix">Best for</span>
+								<span class="tool-value-highlight">
+									<span class="lang-id">{tool.data.value}</span>
+									<span class="lang-en">{tool.data.valueEn}</span>
+								</span>
+							</div>
+							<a href={`/tools/${tool.id}/`} class="tool-explore-btn" data-i18n="tools.explore">
+								Explore →
+							</a>
+						</div>
+					</div>
+				))}
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>

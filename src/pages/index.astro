@@ -3,48 +3,248 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import { getCollection } from 'astro:content';
+import ToolLogo from '../components/ToolLogo.astro';
+
+const tools = await getCollection('tools');
+// Sort tools: featured first, then alphabetically by name
+const sortedTools = tools.sort((a, b) => {
+	if (a.data.featured && !b.data.featured) return -1;
+	if (!a.data.featured && b.data.featured) return 1;
+	return a.data.name.localeCompare(b.data.name);
+});
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="id">
 	<head>
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+		<style>
+			.hero {
+				text-align: center;
+				padding: 3.5rem 0 1rem 0;
+				max-width: 800px;
+				margin: 0 auto;
+			}
+			.hero h1 {
+				margin-bottom: 1rem;
+				line-height: 1.1;
+			}
+			.hero p {
+				font-size: 1.4rem;
+				opacity: 0.9;
+				margin-bottom: 2rem;
+			}
+			.search-container {
+				max-width: 500px;
+				margin: 0 auto 2.5rem auto;
+				position: relative;
+			}
+			.search-wrapper {
+				position: relative;
+				display: flex;
+				align-items: center;
+			}
+			.search-icon {
+				position: absolute;
+				left: 20px;
+				width: 20px;
+				height: 20px;
+				color: var(--color-accent);
+				pointer-events: none;
+			}
+			#search-input {
+				width: 100%;
+				padding: 16px 20px 16px 52px;
+				font-size: 1.1rem;
+				font-family: var(--font-body);
+				font-weight: 600;
+				color: var(--color-accent);
+				background: #ffffff;
+				border: 2px solid var(--color-accent);
+				border-radius: 9999px;
+				box-shadow: 4px 4px 0px var(--color-accent);
+				outline: none;
+				transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+			}
+			#search-input:focus {
+				transform: translate(2px, 2px);
+				box-shadow: 2px 2px 0px var(--color-accent);
+			}
+			.no-results-card {
+				text-align: center;
+				background: #ffffff;
+				border: 2px dashed var(--color-accent);
+				border-radius: 24px;
+				padding: 40px;
+				max-width: 500px;
+				margin: 40px auto;
+				box-shadow: 4px 4px 0px var(--color-accent);
+			}
+		</style>
 	</head>
 	<body>
 		<Header />
 		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This
-				template serves as a lightweight, minimally-styled starting point for anyone looking to build
-				a personal website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to <a href="https://docs.astro.build/"
-					>read the docs
-				</a> or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out <a
-					href="https://github.com/Charca/astro-blog-template"
-					>astro-blog-template
-				</a> by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
+			<section class="hero">
+				<h1 data-i18n="hero.title">⚡ Explore the Best AI Tools ⚡</h1>
+				<p data-i18n="hero.subtitle">
+					A curated collection of the most powerful, beautiful, and advanced AI products to level up your workflow.
+				</p>
+				
+				<div class="search-container">
+					<div class="search-wrapper">
+						<svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+							<circle cx="11" cy="11" r="8"></circle>
+							<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+						</svg>
+						<input type="text" id="search-input" aria-label="Search AI Tools" data-i18n="search.placeholder" placeholder="Search AI Tools..." autocomplete="off" />
+					</div>
+				</div>
+			</section>
+
+			<section id="tools-section" class="tools-grid">
+				{
+					sortedTools.map((tool) => (
+						<div class="tool-card">
+							{tool.data.featured && <div class="featured-badge" data-i18n="tools.featured">Featured</div>}
+							<div class="tool-card-content">
+								<div class="tool-card-header">
+									<div class="tool-logo-container" style={tool.data.accentColor ? `border-color: ${tool.data.accentColor}; background-color: ${tool.data.accentColor}10` : ''}>
+										<ToolLogo name={tool.data.name} style={tool.data.accentColor ? `color: ${tool.data.accentColor}` : ''} />
+									</div>
+									<div class="tool-category-badge">{tool.data.category}</div>
+								</div>
+								<h3 class="tool-title">{tool.data.name}</h3>
+								<div class="tool-creator"><span data-i18n="tools.creator">By</span> {tool.data.creator}</div>
+								<p class="tool-description">
+									<span class="lang-id">{tool.data.description}</span>
+									<span class="lang-en">{tool.data.descriptionEn}</span>
+								</p>
+							</div>
+							<hr class="tool-card-divider" />
+							<div class="tool-card-footer">
+								<div class="tool-value-label">
+									<span class="tool-value-prefix" data-i18n="tools.value_prefix">Best for</span>
+									<span class="tool-value-highlight">
+										<span class="lang-id">{tool.data.value}</span>
+										<span class="lang-en">{tool.data.valueEn}</span>
+									</span>
+								</div>
+								<a href={`/tools/${tool.id}/`} class="tool-explore-btn" data-i18n="tools.explore">
+									Explore →
+								</a>
+							</div>
+						</div>
+					))
+				}
+			</section>
+
+			<div id="no-results" class="no-results-card" style="display: none;">
+				<h3 data-i18n="search.noresults">No tools match your search 😔</h3>
+				<p data-i18n="search.noresults_sub">Try searching for categories like "LLM", "Coding", or specific creators.</p>
+			</div>
 		</main>
 		<Footer />
+
+		<script>
+			// Suggestions list for search placeholder rotation (bilingual)
+			const suggestionsEn = [
+				"Tools for coding...",
+				"Tools for Image Generation...",
+				"Tools for copywriting...",
+				"Tools for video editing...",
+				"Tools for UI design..."
+			];
+
+			const suggestionsId = [
+				"Alat untuk pemrograman...",
+				"Alat untuk membuat gambar...",
+				"Alat untuk menulis artikel...",
+				"Alat untuk edit video...",
+				"Alat untuk desain UI..."
+			];
+
+			let currentSuggestionIndex = 0;
+			let currentCharIndex = 0;
+			let isDeleting = false;
+			const input = document.getElementById('search-input') as HTMLInputElement | null;
+
+			function type() {
+				if (!input) return;
+				const lang = document.documentElement.lang || 'id';
+				const suggestions = lang === 'en' ? suggestionsEn : suggestionsId;
+				const currentFullText = suggestions[currentSuggestionIndex % suggestions.length];
+				
+				if (isDeleting) {
+					// Delete character
+					input.placeholder = currentFullText.substring(0, currentCharIndex - 1);
+					currentCharIndex--;
+				} else {
+					// Type character
+					input.placeholder = currentFullText.substring(0, currentCharIndex + 1);
+					currentCharIndex++;
+				}
+				
+				let typeSpeed = 100;
+				
+				if (isDeleting) {
+					typeSpeed /= 2; // Delete faster
+				}
+				
+				if (!isDeleting && currentCharIndex === currentFullText.length) {
+					// Wait before deleting
+					typeSpeed = 2000;
+					isDeleting = true;
+				} else if (isDeleting && currentCharIndex === 0) {
+					isDeleting = false;
+					// Move to next suggestion
+					currentSuggestionIndex = (currentSuggestionIndex + 1) % suggestions.length;
+					typeSpeed = 500; // Pause before typing next suggestion
+				}
+				
+				setTimeout(type, typeSpeed);
+			}
+
+			// Start typing animation
+			if (input) {
+				type();
+			}
+
+			// Client-side filtering logic
+			const cards = document.querySelectorAll('.tool-card') as NodeListOf<HTMLElement>;
+			const noResultsMessage = document.getElementById('no-results');
+
+			if (input) {
+				input.addEventListener('input', (e) => {
+					const target = e.target as HTMLInputElement;
+					const value = target.value.toLowerCase().trim();
+					let hasMatches = false;
+					
+					cards.forEach(card => {
+						const title = card.querySelector('.tool-title')?.textContent?.toLowerCase() || '';
+						const description = card.querySelector('.tool-description')?.textContent?.toLowerCase() || '';
+						const creator = card.querySelector('.tool-creator')?.textContent?.toLowerCase() || '';
+						const category = card.querySelector('.tool-category-badge')?.textContent?.toLowerCase() || '';
+						
+						if (
+							title.includes(value) || 
+							description.includes(value) || 
+							creator.includes(value) || 
+							category.includes(value)
+						) {
+							card.style.display = 'flex';
+							hasMatches = true;
+						} else {
+							card.style.display = 'none';
+						}
+					});
+					
+					if (noResultsMessage) {
+						noResultsMessage.style.display = hasMatches ? 'none' : 'block';
+					}
+				});
+			}
+		</script>
 	</body>
 </html>

@@ -1,0 +1,290 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { getCollection } from 'astro:content';
+
+const tools = await getCollection('tools');
+
+// Derive unique categories with tool counts and metadata
+const categoryMap = new Map<string, { count: number; tools: typeof tools }>();
+for (const tool of tools) {
+	const cat = tool.data.category;
+	if (!categoryMap.has(cat)) categoryMap.set(cat, { count: 0, tools: [] });
+	const entry = categoryMap.get(cat)!;
+	entry.count++;
+	entry.tools.push(tool);
+}
+
+const categoryData: Record<string, {
+	slug: string;
+	icon: string;
+	color: string;
+	bgColor: string;
+	descId: string;
+	descEn: string;
+}> = {
+	'Language Model': {
+		slug: 'language-model',
+		icon: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+		color: '#F38C3B',
+		bgColor: '#FFF8F2',
+		descId: 'Model bahasa besar yang dapat memahami, menulis, dan bernalar layaknya manusia.',
+		descEn: 'Large language models that can understand, write, and reason like a human.',
+	},
+	'Image Generation': {
+		slug: 'image-generation',
+		icon: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>`,
+		color: '#5865F2',
+		bgColor: '#F0F0FF',
+		descId: 'Ubah teks menjadi karya seni visual yang menakjubkan dalam hitungan detik.',
+		descEn: 'Transform text into stunning visual artwork in seconds.',
+	},
+	'Coding': {
+		slug: 'coding',
+		icon: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
+		color: '#5C54E5',
+		bgColor: '#F2F2FF',
+		descId: 'Editor dan asisten AI yang membantu Anda menulis kode lebih cepat dan lebih baik.',
+		descEn: 'AI editors and assistants that help you write code faster and better.',
+	},
+	'UI Design': {
+		slug: 'ui-design',
+		icon: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>`,
+		color: '#000000',
+		bgColor: '#F5F5F5',
+		descId: 'Rancang antarmuka pengguna indah langsung dari perintah teks.',
+		descEn: 'Design beautiful user interfaces directly from text prompts.',
+	},
+};
+
+const categories = Array.from(categoryMap.entries()).map(([name, data]) => ({
+	name,
+	count: data.count,
+	meta: categoryData[name] ?? {
+		slug: name.toLowerCase().replace(/\s+/g, '-'),
+		icon: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>`,
+		color: '#0a2540',
+		bgColor: '#FAF2EA',
+		descId: `Alat AI dalam kategori ${name}.`,
+		descEn: `AI tools in the ${name} category.`,
+	},
+}));
+---
+
+<!doctype html>
+<html lang="id">
+	<head>
+		<BaseHead title="Kategori AI — Share Bansos AI" description="Jelajahi koleksi alat AI berdasarkan kategorinya. Temukan alat terbaik untuk pemrograman, desain, penulisan, dan lebih banyak lagi." />
+		<style>
+			.category-hero {
+				text-align: center;
+				padding: 3.5rem 0 2.5rem 0;
+				max-width: 680px;
+				margin: 0 auto;
+			}
+
+			.category-hero .eyebrow {
+				font-family: var(--font-body);
+				font-size: 0.72rem;
+				font-weight: 800;
+				text-transform: uppercase;
+				letter-spacing: 0.14em;
+				color: var(--color-accent);
+				opacity: 0.55;
+				display: block;
+				margin-bottom: 1rem;
+			}
+
+			.category-hero h1 {
+				font-size: 3.2em;
+				margin-bottom: 1rem;
+				line-height: 1.05;
+			}
+
+			.category-hero p {
+				font-size: 1.2rem;
+				opacity: 0.8;
+				line-height: 1.6;
+			}
+
+			/* Grid Layout */
+			.category-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+				gap: 28px;
+				margin-top: 48px;
+				padding-bottom: 80px;
+			}
+
+			/* Category Card */
+			.category-card {
+				position: relative;
+				background: #ffffff;
+				border: 2px solid var(--color-accent);
+				border-radius: 24px;
+				box-shadow: 5px 5px 0px var(--color-accent);
+				overflow: hidden;
+				text-decoration: none;
+				color: var(--color-accent);
+				display: flex;
+				flex-direction: column;
+				transition: transform 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+				            box-shadow 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+				will-change: transform;
+			}
+
+			.category-card:hover {
+				transform: translate(-3px, -3px);
+				box-shadow: 8px 8px 0px var(--color-accent);
+			}
+
+			/* Colored accent bar at top */
+			.card-accent-bar {
+				height: 6px;
+				width: 100%;
+				flex-shrink: 0;
+			}
+
+			.card-body {
+				padding: 28px 28px 20px 28px;
+				flex: 1;
+				display: flex;
+				flex-direction: column;
+				gap: 14px;
+			}
+
+			.card-icon-wrap {
+				width: 56px;
+				height: 56px;
+				border-radius: 14px;
+				border: 2px solid currentColor;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+			}
+
+			.card-title {
+				font-family: var(--font-heading);
+				font-size: 2rem;
+				font-weight: 700;
+				line-height: 1.1;
+				margin: 0;
+			}
+
+			.card-desc {
+				font-size: 0.95rem;
+				opacity: 0.75;
+				line-height: 1.55;
+				flex: 1;
+				margin: 0;
+			}
+
+			/* Footer */
+			.card-footer {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				padding: 16px 28px;
+				border-top: 2px dotted var(--color-accent);
+				margin-top: auto;
+			}
+
+			.card-count {
+				display: flex;
+				flex-direction: column;
+				gap: 2px;
+			}
+
+			.card-count-prefix {
+				font-size: 0.68rem;
+				font-weight: 800;
+				text-transform: uppercase;
+				letter-spacing: 0.08em;
+				opacity: 0.55;
+			}
+
+			.card-count-number {
+				font-family: var(--font-heading);
+				font-size: 1.8rem;
+				font-weight: 700;
+				line-height: 1;
+			}
+
+			.card-cta {
+				font-size: 0.92rem;
+				font-weight: 700;
+				display: flex;
+				align-items: center;
+				gap: 4px;
+				opacity: 0.8;
+				transition: opacity 0.15s ease;
+				white-space: nowrap;
+			}
+
+			.category-card:hover .card-cta {
+				opacity: 1;
+			}
+
+			@media (max-width: 720px) {
+				.category-hero h1 { font-size: 2.4em; }
+				.category-grid {
+					grid-template-columns: 1fr;
+					gap: 20px;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<div class="category-hero">
+				<span class="eyebrow">
+					<span class="lang-id">Jelajahi berdasarkan tipe</span>
+					<span class="lang-en">Browse by type</span>
+				</span>
+				<h1>
+					<span class="lang-id">Kategori Alat AI</span>
+					<span class="lang-en">AI Tool Categories</span>
+				</h1>
+				<p>
+					<span class="lang-id">Setiap kategori mewakili satu cara khusus AI mengubah alur kerja Anda. Pilih yang paling relevan.</span>
+					<span class="lang-en">Each category represents a distinct way AI transforms your workflow. Pick what matters most to you.</span>
+				</p>
+			</div>
+
+			<section class="category-grid">
+				{categories.map((cat) => (
+					<a href={`/category/${cat.meta.slug}/`} class="category-card" style={`color: ${cat.meta.color};`}>
+						<div class="card-accent-bar" style={`background: ${cat.meta.color};`}></div>
+						<div class="card-body" style={`background: ${cat.meta.bgColor};`}>
+							<div class="card-icon-wrap" style={`color: ${cat.meta.color}; border-color: ${cat.meta.color};`}>
+								<Fragment set:html={cat.meta.icon} />
+							</div>
+							<h2 class="card-title" style={`color: ${cat.meta.color};`}>{cat.name}</h2>
+							<p class="card-desc" style={`color: var(--color-accent);`}>
+								<span class="lang-id">{cat.meta.descId}</span>
+								<span class="lang-en">{cat.meta.descEn}</span>
+							</p>
+						</div>
+						<div class="card-footer" style={`background: #fff; border-top-color: ${cat.meta.color}40;`}>
+							<div class="card-count">
+								<span class="card-count-prefix">
+									<span class="lang-id">Alat</span>
+									<span class="lang-en">Tools</span>
+								</span>
+								<span class="card-count-number" style={`color: ${cat.meta.color};`}>{cat.count}</span>
+							</div>
+							<span class="card-cta" style={`color: ${cat.meta.color};`}>
+								<span class="lang-id">Lihat semua →</span>
+								<span class="lang-en">View all →</span>
+							</span>
+						</div>
+					</a>
+				))}
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>

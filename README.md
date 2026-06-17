@@ -1,64 +1,125 @@
-# Astro Starter Kit: Blog
+# 🐡 Share Bansos AI
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/astro-blog-starter-template)
+> Direktori AI tools terkurasi — temukan, bandingkan, dan manfaatkan produk AI terbaik untuk meningkatkan produktivitas kamu.
 
-![Astro Template Preview](https://github.com/withastro/astro/assets/2244813/ff10799f-a816-4703-b967-c78997e8323d)
+[![Deploy to GitHub Pages](https://github.com/aristyantoo/share-bansos-ai/actions/workflows/deploy.yml/badge.svg)](https://github.com/aristyantoo/share-bansos-ai/actions/workflows/deploy.yml)
+[![Built with Astro](https://img.shields.io/badge/Built%20with-Astro%206-blueviolet?logo=astro)](https://astro.build)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-<!-- dash-content-start -->
+---
 
-Create a blog with Astro and deploy it on Cloudflare Workers as a [static website](https://developers.cloudflare.com/workers/static-assets/).
+## 🌐 Live Site
 
-Features:
+**[https://share.loc.cc](https://share.loc.cc)**
 
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and OpenGraph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
-- ✅ Built-in Observability logging
+---
 
-<!-- dash-content-end -->
+## ✨ Tentang Proyek
 
-## Getting Started
+**Share Bansos AI** adalah website direktori AI tools yang dikurasi secara manual — mirip seperti "Product Hunt" khusus AI, tapi lebih ringan dan cepat. Dibangun dengan Astro sebagai static site untuk performa optimal.
 
-Outside of this repo, you can start a new project with this template using [C3](https://developers.cloudflare.com/pages/get-started/c3/) (the `create-cloudflare` CLI):
+### Fitur Utama
 
-```bash
-npm create cloudflare@latest -- --template=cloudflare/templates/astro-blog-starter-template
+- 🚀 **100/100 Lighthouse** — Performa, aksesibilitas, dan SEO optimal
+- 🌏 **Bilingual (ID/EN)** — Konten tersedia dalam Bahasa Indonesia dan English
+- 🗂️ **Direktori AI Tools** — ChatGPT, Claude, Gemini, Cursor, Midjourney, v0, dan terus bertambah
+- 📡 **RSS Feed** — Subscribe ke pembaruan tools terbaru
+- 🗺️ **Sitemap otomatis** — SEO-friendly dengan sitemap XML
+- ✍️ **Markdown & MDX** — Konten mudah dikelola lewat file `.md`
+- 🔒 **Static Output** — Deploy ke GitHub Pages / CDN manapun
+
+---
+
+## 🛠️ Tech Stack
+
+| Teknologi | Versi | Peran |
+|-----------|-------|-------|
+| [Astro](https://astro.build) | `^6.4.7` | Framework utama (Static SSG) |
+| [@astrojs/mdx](https://docs.astro.build/en/guides/markdown-content/) | `^6.0.3` | Dukungan MDX |
+| [@astrojs/rss](https://docs.astro.build/en/guides/rss/) | `^4.0.18` | RSS Feed |
+| [@astrojs/sitemap](https://docs.astro.build/en/guides/sitemap/) | `^3.7.3` | Sitemap XML |
+| TypeScript | `5.9.3` | Type safety |
+
+---
+
+## 🚀 Struktur Proyek
+
+```
+share-bansos-ai/
+├── public/              # Aset statis (favicon, gambar, CNAME)
+├── src/
+│   ├── components/      # Komponen Astro yang dapat digunakan ulang
+│   ├── content/
+│   │   └── tools/       # File Markdown tiap AI tool (chatgpt.md, claude.md, dst.)
+│   ├── layouts/         # Layout halaman (BaseLayout, BlogPost, dst.)
+│   ├── pages/           # Halaman & route (index, blog, rss.xml, dst.)
+│   └── styles/          # CSS global
+├── .github/
+│   └── workflows/
+│       └── deploy.yml   # GitHub Actions — auto deploy ke GitHub Pages
+├── astro.config.mjs     # Konfigurasi Astro
+└── package.json
 ```
 
-A live public deployment of this template is available at [https://astro-blog-starter-template.templates.workers.dev](https://astro-blog-starter-template.templates.workers.dev)
-
-## 🚀 Project Structure
-
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
-
-Any static assets, like images, can be placed in the `public/` directory.
+---
 
 ## 🧞 Commands
 
-All commands are run from the root of the project, from a terminal:
+Semua perintah dijalankan dari root proyek:
 
-| Command                           | Action                                           |
-| :-------------------------------- | :----------------------------------------------- |
-| `npm install`                     | Installs dependencies                            |
-| `npm run dev`                     | Starts local dev server at `localhost:4321`      |
-| `npm run build`                   | Build your production site to `./dist/`          |
-| `npm run preview`                 | Preview your build locally, before deploying     |
-| `npm run astro ...`               | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help`         | Get help using the Astro CLI                     |
-| `npm run build && npm run deploy` | Deploy your production site to Cloudflare        |
-| `npm wrangler tail`               | View real-time logs for all Workers              |
+| Command | Aksi |
+| :------------------------- | :----------------------------------------------- |
+| `npm install` | Install semua dependensi |
+| `npm run dev` | Jalankan dev server di `localhost:4321` |
+| `npm run build` | Build produksi ke `./dist/` |
+| `npm run preview` | Preview build lokal sebelum deploy |
+| `npm run check` | Build + type-check TypeScript |
+| `npm run astro ...` | Jalankan perintah Astro CLI (`astro add`, dst.) |
 
-## 👀 Want to learn more?
+---
 
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## 📝 Cara Menambah AI Tool
 
-## Credit
+1. Buat file baru di `src/content/tools/nama-tool.md`
+2. Isi dengan frontmatter yang sesuai:
 
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+```markdown
+---
+name: Nama Tool
+description: Deskripsi singkat dalam Bahasa Indonesia.
+descriptionEn: Short description in English.
+category: Language Model
+url: https://link-ke-tool.com
+logoUrl: ""
+price: Free / $X/mo
+creator: Nama Perusahaan
+value: Fitur Unggulan
+valueEn: Key Feature
+featured: false
+accentColor: '#HEX'
+---
+
+Konten lengkap di sini...
+```
+
+3. Commit dan push ke branch `main` — GitHub Actions akan otomatis build & deploy.
+
+---
+
+## 🤝 Kontribusi
+
+Pull request dan issue sangat disambut! Silakan fork repo ini, tambahkan AI tool favorit kamu, dan buat PR.
+
+---
+
+## 👀 Referensi & Inspirasi
+
+- [Astro Documentation](https://docs.astro.build)
+- [Astro Discord Community](https://astro.build/chat)
+- [Bear Blog](https://github.com/HermanMartinus/bearblog/) — inspirasi desain minimalis
+
+---
+
+## 📄 License
+
+MIT © [Aristyanto Heri Trimawan](https://github.com/aristyantoo)
