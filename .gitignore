@@ -56,3 +56,20 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# AI Agents & Assistants
+.claude/
+.claude.json
+claude-session.json
+claude.log
+.aider*
+!.aider.conf.yml
+.aider.chat.history.md
+.aider.tags.cache.v3
+.cursor/
+.copilot/
+**/scratch/
+*.prompt
+*.prompts
+llm-logs/
+ai-chats/
