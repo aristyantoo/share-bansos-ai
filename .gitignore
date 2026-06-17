@@ -73,3 +73,5 @@ claude.log
 *.prompts
 llm-logs/
 ai-chats/
+.lean-ctx/
+.agents/
