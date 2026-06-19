@@ -21,8 +21,9 @@
 ### Fitur Utama
 
 - 🚀 **100/100 Lighthouse** — Performa, aksesibilitas, dan SEO optimal
-- 🌏 **Bilingual (ID/EN)** — Konten tersedia dalam Bahasa Indonesia dan English
-- 🗂️ **Direktori AI Tools** — ChatGPT, Claude, Gemini, Cursor, Midjourney, v0, dan terus bertambah
+- 🌏 **Bilingual (ID/EN)** — Konten tersedia dalam Bahasa Indonesia dan English dengan toggle switcher
+- 🗂️ **Direktori AI Tools** — ChatGPT, Claude, Gemini, Cursor, Kiro, Leonardo AI, Midjourney, OpenArt, v0, dan terus bertambah
+- ⭐ **Reviews & Ratings** — Fitur ulasan dan rating interaktif terintegrasi dengan backend Supabase
 - 📡 **RSS Feed** — Subscribe ke pembaruan tools terbaru
 - 🗺️ **Sitemap otomatis** — SEO-friendly dengan sitemap XML
 - ✍️ **Markdown & MDX** — Konten mudah dikelola lewat file `.md`
@@ -81,7 +82,7 @@ Semua perintah dijalankan dari root proyek:
 ## 📝 Cara Menambah AI Tool
 
 1. Buat file baru di `src/content/tools/nama-tool.md`
-2. Isi dengan frontmatter yang sesuai:
+2. Isi dengan frontmatter. Skema minimal wajib:
 
 ```markdown
 ---
@@ -99,10 +100,11 @@ featured: false
 accentColor: '#HEX'
 ---
 
-Konten lengkap di sini...
+Konten lengkap penjelasan detail tool di sini...
 ```
 
-3. Commit dan push ke branch `main` — GitHub Actions akan otomatis build & deploy.
+3. **Rich Metadata (Opsional)**: Halaman detail mendukung slider kalkulator harga, list fitur detail, petunjuk langkah demi langkah, dan metadata spesifikasi lainnya. Tinjau file [kiro.md](file:///src/content/tools/kiro.md) atau [chatgpt.md](file:///src/content/tools/chatgpt.md) sebagai referensi skema lengkap (`features`, `pricing`, `steps`, `comparisons`, `platforms`, dll.).
+4. Commit dan push ke branch `main` — GitHub Actions akan otomatis build & deploy.
 
 ---
 
