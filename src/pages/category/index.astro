@@ -111,7 +111,7 @@ const categories = Array.from(categoryMap.entries()).map(([name, data]) => ({
 			/* Grid Layout */
 			.category-grid {
 				display: grid;
-				grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+				grid-template-columns: repeat(auto-fill, minmax(min(290px, 100%), 1fr));
 				gap: 28px;
 				margin-top: 48px;
 				padding-bottom: 80px;

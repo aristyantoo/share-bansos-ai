@@ -17,6 +17,31 @@ dan proyek ini menggunakan [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ---
 
+## [1.1.0] — 2026-06-19
+
+### Added
+- 🌐 **Dukungan Bilingual (Indonesian & English)** — Dukungan terjemahan penuh untuk deskripsi, paket harga, langkah penggunaan, dan tabel perbandingan side-by-side di file markdown serta antarmuka UI.
+- 🎛️ **Bilingual Toggle & Selector** — Tombol interaktif untuk berpindah bahasa dengan penyimpanan state yang konsisten.
+- ⭐ **Fitur Review & Rating Terintegrasi** — Integrasi ulasan pengguna dengan database backend Supabase (`@supabase/supabase-js`) pada halaman detail tool, menampilkan rating rata-rata, diagram distribusi bintang (rating bar), daftar ulasan, serta formulir pengiriman ulasan baru secara interaktif.
+- 🛠️ **3 AI Tools baru**:
+  - [Kiro](file:///src/content/tools/kiro.md) — Editor kode berbasis Code OSS dengan kecerdasan buatan.
+  - [Leonardo AI](file:///src/content/tools/leonardo.md) — Pembuat gambar AI dengan warna aksen kustom dan logo SVG dinamis.
+  - [OpenArt](file:///src/content/tools/openart.md) — Generator gambar kreatif berbasis AI.
+- 📦 **TypeScript Support** — Penambahan dependensi TypeScript `5.9.3` untuk menjamin keamanan tipe data di dalam komponen Astro.
+
+### Changed
+- 🎨 **Redesain Halaman Detail Tool (`[slug].astro`)**:
+  - Tampilan visual premium, bersih, dan modern yang selaras dengan panduan desain.
+  - Penambahan slider kalkulator harga dinamis (Monthly vs. Annual billing) yang interaktif.
+  - Sidebar detail tool, info harga, dan rekomendasi tool terkait yang terintegrasi secara bilingual.
+  - Navigasi breadcrumbs dinamis berdasarkan kategori tool.
+
+### Fixed
+- 🚀 **GitHub Actions CI/CD** — Konfigurasi build menggunakan Node.js versi 22 secara eksplisit pada alur kerja `withastro/action@v3` untuk mencegah kegagalan kompilasi.
+- 🧹 **Pembersihan Repositori** — Penghapusan file placeholder template dan artefak sistem desain lama yang tidak digunakan.
+
+---
+
 ## [1.0.0] — 2026-06-17
 
 ### Added
@@ -54,6 +79,7 @@ dan proyek ini menggunakan [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ---
 
-[Unreleased]: https://github.com/aristyantoo/share-bansos-ai/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/aristyantoo/share-bansos-ai/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/aristyantoo/share-bansos-ai/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/aristyantoo/share-bansos-ai/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/aristyantoo/share-bansos-ai/releases/tag/v0.1.0

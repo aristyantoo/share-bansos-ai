@@ -154,7 +154,7 @@ const meta = categoryMeta[categoryName] ?? {
 			/* Tools Grid — reuse global card styles */
 			.tools-grid {
 				display: grid;
-				grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+				grid-template-columns: repeat(auto-fill, minmax(min(290px, 100%), 1fr));
 				gap: 28px;
 				padding-bottom: 80px;
 			}
@@ -220,7 +220,7 @@ const meta = categoryMeta[categoryName] ?? {
 								</div>
 								<div class="tool-category-badge">{tool.data.category}</div>
 							</div>
-							<h3 class="tool-title">{tool.data.name}</h3>
+							<h2 class="tool-title">{tool.data.name}</h2>
 							<div class="tool-creator"><span data-i18n="tools.creator">By</span> {tool.data.creator}</div>
 							<p class="tool-description">
 								<span class="lang-id">{tool.data.description}</span>

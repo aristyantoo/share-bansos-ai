@@ -25,6 +25,24 @@ const allTools = await getCollection('tools');
 const relatedTools = allTools
 	.filter((t) => t.id !== tool.id && t.data.category === tool.data.category)
 	.slice(0, 2);
+
+// Helper to format price parts for bilingual display
+function formatPricePart(part: string) {
+	if (!part) return { id: '', en: '' };
+	const trimmed = part.trim();
+	if (trimmed === 'Free') {
+		return { id: 'Gratis', en: 'Free' };
+	}
+	if (trimmed === 'Free Trial') {
+		return { id: 'Uji Coba Gratis', en: 'Free Trial' };
+	}
+	if (trimmed.startsWith('From ')) {
+		const clean = trimmed.replace('From ', '').replace('/mo', '');
+		return { id: `Mulai ${clean}/bulan`, en: `From ${clean}/mo` };
+	}
+	const cleanId = trimmed.replace('/mo', '/bulan');
+	return { id: cleanId, en: trimmed };
+}
 ---
 
 <!doctype html>
@@ -32,11 +50,72 @@ const relatedTools = allTools
 	<head>
 		<BaseHead title={`${tool.data.name} - Share Bansos AI`} description={tool.data.description} />
 		<style>
-			.tool-header-area {
+			/* ─── BREADCRUMB ─────────────────────────────── */
+			.breadcrumb {
+				font-size: 0.8rem;
+				color: var(--color-accent);
+				opacity: 0.6;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				padding-left: 12px;
+				font-weight: 500;
+			}
+			.breadcrumb a {
+				text-decoration: none;
+				transition: opacity 0.15s;
+			}
+			.breadcrumb a:hover {
+				opacity: 0.7;
+			}
+			.breadcrumb span {
+				opacity: 0.5;
+			}
+
+			/* ─── LAYOUT ─────────────────────────────────── */
+			.detail-container {
+				display: grid;
+				grid-template-columns: 2fr 1fr;
+				gap: 40px;
+				align-items: start;
+				margin-top: 24px;
+			}
+
+			/* ─── MAIN COLUMN ────────────────────────────── */
+			.main-column {
+				display: flex;
+				flex-direction: column;
+				gap: 32px;
+				min-width: 0;
+			}
+
+			/* HERO CARD */
+			.hero-card {
+				background: #ffffff;
+				border: 2px solid var(--color-accent);
+				border-radius: 24px;
+				box-shadow: 6px 6px 0px var(--color-accent);
+				padding: 32px;
+				position: relative;
+				overflow: hidden;
+			}
+			.hero-top {
+				display: flex;
+				align-items: flex-start;
+				justify-content: space-between;
+				gap: 20px;
+				margin-bottom: 20px;
+			}
+			.hero-left {
+				display: flex;
+				flex-direction: column;
+				align-items: flex-start;
+				gap: 16px;
+			}
+			.hero-brand-row {
 				display: flex;
 				align-items: center;
 				gap: 20px;
-				margin-bottom: 2rem;
 			}
 			.tool-detail-logo {
 				width: 72px;
@@ -49,144 +128,2080 @@ const relatedTools = allTools
 				font-size: 2.2rem;
 				font-weight: bold;
 				background: #FAF2EA;
+				box-shadow: 3px 3px 0px var(--color-accent);
 			}
-			.tool-detail-logo svg {
-				width: 38px;
-				height: 38px;
+			.tool-detail-logo :global(svg) {
+				width: 42px;
+				height: 42px;
 			}
 			.tool-meta-title h1 {
 				margin: 0;
-				line-height: 1;
+				line-height: 1.1;
+				font-size: 2.4rem;
+				font-family: var(--font-body);
+				font-weight: 800;
 			}
-			.tool-meta-title p {
+			.tool-creator {
 				margin: 5px 0 0 0;
-				font-size: 1.1rem;
-				opacity: 0.8;
+				font-size: 0.95rem;
+				font-weight: 600;
+				opacity: 0.85;
 			}
-			.stat-item {
-				margin-bottom: 1.2rem;
+			.tool-creator a {
+				text-decoration: underline;
 			}
-			.stat-item:last-child {
-				margin-bottom: 0;
+			
+			.tool-badges {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+				margin-bottom: 12px;
 			}
-			.stat-label {
-				font-size: 0.8rem;
+			.badge {
+				display: inline-flex;
+				align-items: center;
+				gap: 4px;
+				padding: 4px 10px;
+				border-radius: 8px;
+				border: 2px solid var(--color-accent);
+				font-size: 0.75rem;
+				font-weight: 800;
 				text-transform: uppercase;
 				letter-spacing: 0.05em;
-				opacity: 0.7;
-				margin-bottom: 2px;
+				box-shadow: 2px 2px 0px var(--color-accent);
 			}
-			.stat-value {
-				font-size: 1.1rem;
-				font-weight: 700;
+			.badge-category {
+				background: #E0F2FE; /* Light blue */
 			}
-			.related-title {
-				font-family: var(--font-heading);
-				font-size: 1.8rem;
-				margin-bottom: 1rem;
+			.badge-featured {
+				background: #FEF08A; /* Light yellow */
 			}
-			.related-list {
-				display: flex;
-				flex-direction: column;
-				gap: 15px;
+			.badge-hot {
+				background: #FED7AA; /* Light orange */
 			}
-			.related-item {
-				border: 2px solid var(--color-accent);
-				border-radius: 12px;
-				padding: 12px;
-				background: #FAF2EA;
+
+			.hero-actions {
 				display: flex;
 				align-items: center;
 				gap: 12px;
+			}
+			.btn-primary {
+				display: inline-flex;
+				align-items: center;
+				gap: 8px;
+				padding: 12px 24px;
+				border-radius: 30px;
+				background: #F38C3B;
+				border: 2px solid var(--color-accent);
+				font-weight: 800;
+				font-size: 0.95rem;
+				box-shadow: 3px 3px 0px var(--color-accent);
+				transition: all 0.15s ease;
+				cursor: pointer;
+				white-space: nowrap;
+			}
+			.btn-primary:hover {
+				transform: translate(-2px, -2px);
+				box-shadow: 5px 5px 0px var(--color-accent);
+			}
+			.btn-bookmark {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				width: 44px;
+				height: 44px;
+				border-radius: 50%;
+				background: #ffffff;
+				border: 2px solid var(--color-accent);
+				box-shadow: 3px 3px 0px var(--color-accent);
+				transition: all 0.15s ease;
+				cursor: pointer;
+			}
+			.btn-bookmark:hover {
+				transform: translate(-1px, -1px);
+				box-shadow: 4px 4px 0px var(--color-accent);
+				background: #FAF2EA;
+			}
+			.tool-desc {
+				font-size: 1.05rem;
+				line-height: 1.6;
+				margin: 0;
+			}
+			.hero-divider {
+				border-top: 2px solid var(--color-accent);
+				margin: 20px 0;
+			}
+
+			/* QUICK STATS */
+			.quick-stats {
+				display: grid;
+				grid-template-columns: repeat(4, 1fr);
+				gap: 16px;
+			}
+			.stat-card {
+				background: #ffffff;
+				border: 2px solid var(--color-accent);
+				border-radius: 16px;
+				box-shadow: 4px 4px 0px var(--color-accent);
+				padding: 16px;
+				display: flex;
+				flex-direction: column;
+				gap: 6px;
+			}
+			.stat-label {
+				font-size: 0.75rem;
+				font-weight: 800;
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+				opacity: 0.65;
+			}
+			.stat-value {
+				font-size: 1.25rem;
+				font-weight: 800;
+				line-height: 1.2;
+			}
+			.stat-value.green {
+				color: #10B981;
+			}
+			.stat-sub {
+				font-size: 0.8rem;
+				opacity: 0.7;
+			}
+
+			/* SECTIONS */
+			.neo-section {
+				background: #ffffff;
+				border: 2px solid var(--color-accent);
+				border-radius: 24px;
+				box-shadow: 6px 6px 0px var(--color-accent);
+				padding: 32px;
+			}
+			.section-title {
+				font-family: var(--font-heading);
+				font-size: 2.2rem;
+				font-weight: bold;
+				margin-bottom: 24px;
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				line-height: 1;
+			}
+			.section-title-dot {
+				width: 12px;
+				height: 12px;
+				background: #F38C3B;
+				border: 2px solid var(--color-accent);
+				border-radius: 50%;
+			}
+
+			/* FEATURES GRID */
+			.features-grid {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 16px;
+			}
+			.feature-item {
+				background: #FAF2EA;
+				border: 2px solid var(--color-accent);
+				border-radius: 16px;
+				box-shadow: 3px 3px 0px var(--color-accent);
+				padding: 20px;
 				transition: transform 0.15s ease;
+			}
+			.feature-item:hover {
+				transform: translate(-1px, -1px);
+				box-shadow: 4px 4px 0px var(--color-accent);
+			}
+			.feature-icon-box {
+				width: 40px;
+				height: 40px;
+				border-radius: 10px;
+				background: #ffffff;
+				border: 2px solid var(--color-accent);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 1.3rem;
+				margin-bottom: 12px;
+				box-shadow: 2px 2px 0px var(--color-accent);
+			}
+			.feature-name {
+				font-size: 1.1rem;
+				font-weight: 800;
+				margin-bottom: 6px;
+			}
+			.feature-desc {
+				font-size: 0.9rem;
+				line-height: 1.5;
+				opacity: 0.85;
+				margin: 0;
+			}
+
+			/* PRICING */
+			.pricing-switcher-wrapper {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 24px;
+				flex-wrap: wrap;
+				gap: 12px;
+			}
+			.pricing-tabs {
+				display: inline-flex;
+				gap: 4px;
+				background: #FAF2EA;
+				border: 2px solid var(--color-accent);
+				border-radius: 50px;
+				padding: 4px;
+				box-shadow: 2px 2px 0px var(--color-accent);
+			}
+			.pricing-tab {
+				padding: 8px 18px;
+				border-radius: 20px;
+				font-size: 0.85rem;
+				font-weight: 800;
+				cursor: pointer;
+				transition: all 0.15s;
+				display: flex;
+				align-items: center;
+				gap: 6px;
+			}
+			.pricing-tab.active {
+				background: var(--color-accent);
+				color: #ffffff;
+			}
+			.annual-save-badge {
+				background: #10B981;
+				color: #ffffff;
+				padding: 2px 6px;
+				border-radius: 6px;
+				font-size: 0.65rem;
+				font-weight: 800;
+			}
+			.pricing-note {
+				font-size: 0.8rem;
+				opacity: 0.7;
+			}
+			
+			/* Pricing Standard Grid */
+			.pricing-grid {
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				gap: 16px;
+			}
+			.pricing-card {
+				background: #ffffff;
+				border: 2px solid var(--color-accent);
+				border-radius: 20px;
+				padding: 24px;
+				position: relative;
+				box-shadow: 4px 4px 0px var(--color-accent);
+				display: flex;
+				flex-direction: column;
+				transition: transform 0.15s ease;
+			}
+			.pricing-card:hover {
+				transform: translateY(-2px);
+				box-shadow: 6px 6px 0px var(--color-accent);
+			}
+			.pricing-card.popular {
+				background: #FFFDF5;
+				border-color: var(--color-accent);
+				box-shadow: 6px 6px 0px var(--color-accent);
+			}
+			.pricing-card.popular:hover {
+				box-shadow: 8px 8px 0px var(--color-accent);
+			}
+			.popular-badge {
+				position: absolute;
+				top: -12px;
+				left: 50%;
+				transform: translateX(-50%) rotate(-2deg);
+				background: #FACC15;
+				border: 2px solid var(--color-accent);
+				color: var(--color-accent);
+				font-size: 0.65rem;
+				font-weight: 800;
+				padding: 4px 12px;
+				border-radius: 8px;
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+				box-shadow: 2px 2px 0px var(--color-accent);
+			}
+			.plan-name {
+				font-size: 1.25rem;
+				font-weight: 800;
+				margin-bottom: 4px;
+			}
+			.plan-tagline {
+				font-size: 0.85rem;
+				opacity: 0.75;
+				margin-bottom: 16px;
+				line-height: 1.4;
+				min-height: 40px;
+			}
+			.plan-price {
+				display: flex;
+				align-items: baseline;
+				gap: 4px;
+				margin-bottom: 2px;
+			}
+			.price-amount {
+				font-size: 2.2rem;
+				font-weight: 800;
+			}
+			.price-period {
+				font-size: 0.95rem;
+				font-weight: 700;
+				opacity: 0.7;
+			}
+			.price-annual-note {
+				font-size: 0.75rem;
+				font-weight: 600;
+				opacity: 0.7;
+				margin-bottom: 20px;
+				min-height: 18px;
+			}
+			.plan-cta {
+				width: 100%;
+				padding: 10px 16px;
+				border-radius: 12px;
+				border: 2px solid var(--color-accent);
+				font-weight: 800;
+				font-size: 0.9rem;
+				cursor: pointer;
+				transition: all 0.15s;
+				text-align: center;
+				margin-bottom: 20px;
+				box-shadow: 2px 2px 0px var(--color-accent);
+			}
+			.plan-cta.cta-outline {
+				background: #ffffff;
+			}
+			.plan-cta.cta-outline:hover {
+				background: #FAF2EA;
+				transform: translate(-1px, -1px);
+				box-shadow: 3px 3px 0px var(--color-accent);
+			}
+			.plan-cta.cta-accent {
+				background: #F38C3B;
+			}
+			.plan-cta.cta-accent:hover {
+				transform: translate(-1px, -1px);
+				box-shadow: 3px 3px 0px var(--color-accent);
+			}
+			.plan-divider {
+				border-top: 2px dotted var(--color-accent);
+				margin-bottom: 20px;
+			}
+			.plan-features {
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+				flex-grow: 1;
+			}
+			.plan-feature {
+				display: flex;
+				align-items: flex-start;
+				gap: 8px;
+				font-size: 0.85rem;
+				line-height: 1.4;
+			}
+			.plan-feature .check {
+				color: #10B981;
+				font-weight: 800;
+			}
+			.plan-feature .cross {
+				color: #EF4444;
+				font-weight: 800;
+			}
+
+			.pricing-pane {
+				display: none;
+			}
+			.pricing-pane.active {
+				display: block;
+			}
+
+			/* Pricing Neo-Brutalist Slider */
+			.neo-slider-container {
+				background: #FAF2EA;
+				border: 2px solid var(--color-accent);
+				border-radius: 20px;
+				padding: 24px;
+				box-shadow: 4px 4px 0px var(--color-accent);
+				margin-bottom: 24px;
+			}
+			.neo-slider-wrapper {
+				position: relative;
+				margin: 20px 0 10px 0;
+			}
+			.neo-slider {
+				-webkit-appearance: none;
+				appearance: none;
+				width: 100%;
+				height: 12px;
+				border-radius: 10px;
+				background: #ffffff;
+				border: 2px solid var(--color-accent);
+				outline: none;
+			}
+			.neo-slider::-webkit-slider-thumb {
+				-webkit-appearance: none;
+				appearance: none;
+				width: 28px;
+				height: 28px;
+				border-radius: 50%;
+				background: #F38C3B;
+				border: 2px solid var(--color-accent);
+				cursor: pointer;
+				box-shadow: 2px 2px 0px var(--color-accent);
+				transition: transform 0.1s;
+			}
+			.neo-slider::-webkit-slider-thumb:hover {
+				transform: scale(1.15);
+			}
+			.neo-slider-labels {
+				display: flex;
+				justify-content: space-between;
+				padding: 0 10px;
+				margin-top: 8px;
+			}
+			.neo-slider-label {
+				font-size: 0.8rem;
+				font-weight: 800;
+				cursor: pointer;
+				opacity: 0.6;
+				transition: all 0.15s;
+			}
+			.neo-slider-label.active {
+				opacity: 1;
+				color: #F38C3B;
+				transform: scale(1.1);
+			}
+			.slider-card-wrapper {
+				display: flex;
+				justify-content: center;
+				margin-top: 16px;
+			}
+			.slider-card-wrapper .pricing-card {
+				width: 100%;
+				max-width: 450px;
+				background: #ffffff;
+			}
+
+			/* HOW TO GET STARTED */
+			.steps {
+				display: flex;
+				flex-direction: column;
+				gap: 20px;
+			}
+			.step-card {
+				position: relative;
+				background: #ffffff;
+				border: 2px solid var(--color-accent);
+				border-radius: 16px;
+				padding: 24px 24px 24px 36px;
+				box-shadow: 4px 4px 0px var(--color-accent);
+			}
+			.step-num {
+				position: absolute;
+				top: 50%;
+				left: -16px;
+				transform: translateY(-50%);
+				width: 32px;
+				height: 32px;
+				border-radius: 50%;
+				background: #FACC15;
+				border: 2px solid var(--color-accent);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-weight: 800;
+				box-shadow: 2px 2px 0px var(--color-accent);
+				font-size: 0.95rem;
+			}
+			.step-title {
+				font-size: 1.1rem;
+				font-weight: 800;
+				margin-bottom: 6px;
+			}
+			.step-desc {
+				font-size: 0.9rem;
+				line-height: 1.5;
+				margin: 0;
+				opacity: 0.9;
+			}
+			.step-code {
+				margin-top: 12px;
+				background: #FAF2EA;
+				border: 2px solid var(--color-accent);
+				border-radius: 8px;
+				padding: 10px 14px;
+				font-family: monospace;
+				font-size: 0.85rem;
+				color: var(--color-accent);
+				font-weight: bold;
+				display: inline-block;
+			}
+
+			/* COMPARISON TABLE */
+			.table-wrapper {
+				overflow-x: auto;
+				border: 2px solid var(--color-accent);
+				border-radius: 16px;
+				box-shadow: 4px 4px 0px var(--color-accent);
+			}
+			.comparisons-table {
+				width: 100%;
+				border-collapse: collapse;
+				background: #ffffff;
+				font-size: 0.9rem;
+				text-align: left;
+			}
+			.comparisons-table th {
+				background: #FAF2EA;
+				border-bottom: 2px solid var(--color-accent);
+				padding: 12px 16px;
+				font-weight: 800;
+				text-transform: uppercase;
+				font-size: 0.75rem;
+				letter-spacing: 0.05em;
+			}
+			.comparisons-table td {
+				padding: 14px 16px;
+				border-bottom: 2px dotted rgba(10, 37, 64, 0.1);
+			}
+			.comparisons-table tr:last-child td {
+				border-bottom: none;
+			}
+			.comparisons-table tr.highlighted {
+				background: #FEF08A; /* Light yellow highlighting */
+			}
+			.comparisons-table tr.highlighted td {
+				font-weight: 700;
+			}
+			.check-icon {
+				color: #10B981;
+				font-weight: bold;
+			}
+			.cross-icon {
+				color: #EF4444;
+				font-weight: bold;
+			}
+
+			/* ─── SIDEBAR COLUMN ─────────────────────────── */
+			.detail-sidebar {
+				display: flex;
+				flex-direction: column;
+				gap: 32px;
+			}
+			.sidebar-card {
+				background: #ffffff;
+				border: 2px solid var(--color-accent);
+				border-radius: 20px;
+				padding: 24px;
+				box-shadow: 6px 6px 0px var(--color-accent);
+			}
+			.sidebar-title {
+				font-size: 0.75rem;
+				font-weight: 800;
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+				opacity: 0.65;
+				margin-bottom: 16px;
+			}
+			
+			/* META LIST */
+			.meta-list {
+				display: flex;
+				flex-direction: column;
+				gap: 12px;
+			}
+			.meta-row {
+				display: flex;
+				justify-content: space-between;
+				gap: 12px;
+				font-size: 0.85rem;
+				line-height: 1.4;
+				border-bottom: 1px dotted rgba(10, 37, 64, 0.1);
+				padding-bottom: 8px;
+			}
+			.meta-row:last-child {
+				border-bottom: none;
+				padding-bottom: 0;
+			}
+			.meta-key {
+				font-weight: 700;
+				opacity: 0.7;
+			}
+			.meta-val {
+				font-weight: 800;
+				text-align: right;
+			}
+			.meta-val a {
+				text-decoration: underline;
+			}
+
+			/* PLATFORMS */
+			.platform-chips {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+			}
+			.platform-chip {
+				padding: 6px 12px;
+				border-radius: 10px;
+				background: #FAF2EA;
+				border: 2px solid var(--color-accent);
+				font-size: 0.8rem;
+				font-weight: 700;
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				box-shadow: 2px 2px 0px var(--color-accent);
+			}
+
+			/* RATINGS */
+			.rating-summary {
+				display: flex;
+				align-items: center;
+				gap: 16px;
+				margin-bottom: 16px;
+			}
+			.rating-num {
+				font-size: 2.8rem;
+				font-weight: 800;
+				line-height: 1;
+				font-family: var(--font-body);
+			}
+			.rating-stars {
+				display: flex;
+				gap: 2px;
+				color: #FACC15;
+				font-size: 1.1rem;
+			}
+			.rating-count {
+				font-size: 0.75rem;
+				opacity: 0.7;
+				margin-top: 4px;
+				font-weight: 600;
+			}
+			.rating-bars {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+			}
+			.rating-bar-row {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				font-size: 0.75rem;
+				font-weight: 700;
+			}
+			.rating-bar-label {
+				width: 8px;
+				text-align: center;
+			}
+			.rating-bar-track {
+				flex: 1;
+				height: 8px;
+				background: #FAF2EA;
+				border: 2px solid var(--color-accent);
+				border-radius: 10px;
+				overflow: hidden;
+			}
+			.rating-bar-fill {
+				height: 100%;
+				background: #FACC15;
+				border-right: 2px solid var(--color-accent);
+			}
+			.rating-bar-count {
+				width: 24px;
+				text-align: right;
+				opacity: 0.7;
+			}
+			
+			.btn-review {
+				width: 100%;
+				padding: 10px;
+				margin-top: 16px;
+				background: #ffffff;
+				border: 2px solid var(--color-accent);
+				border-radius: 12px;
+				font-weight: 800;
+				font-size: 0.85rem;
+				cursor: pointer;
+				box-shadow: 2px 2px 0px var(--color-accent);
+				transition: all 0.15s;
+			}
+			.btn-review:hover {
+				background: #FAF2EA;
+				transform: translate(-1px, -1px);
+				box-shadow: 3px 3px 0px var(--color-accent);
+			}
+
+			/* RELATED TOOLS */
+			.related-list {
+				display: flex;
+				flex-direction: column;
+				gap: 12px;
+			}
+			.related-item {
+				background: #FAF2EA;
+				border: 2px solid var(--color-accent);
+				border-radius: 14px;
+				padding: 12px;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				box-shadow: 3px 3px 0px var(--color-accent);
+				transition: all 0.15s;
 			}
 			.related-item:hover {
 				transform: translate(-2px, -2px);
-				box-shadow: 2px 2px 0px var(--color-accent);
+				box-shadow: 5px 5px 0px var(--color-accent);
+			}
+			.related-left {
+				display: flex;
+				align-items: center;
+				gap: 12px;
 			}
 			.related-logo {
-				width: 36px;
-				height: 36px;
+				width: 40px;
+				height: 40px;
 				border-radius: 8px;
 				border: 2px solid var(--color-accent);
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				font-size: 1.2rem;
+				font-size: 1.25rem;
 				font-weight: bold;
-				background: #fff;
+				background: #ffffff;
 			}
-			.related-logo svg {
-				width: 20px;
-				height: 20px;
+			.related-logo :global(svg) {
+				width: 22px;
+				height: 22px;
+			}
+			.related-details {
+				display: flex;
+				flex-direction: column;
 			}
 			.related-name {
-				font-weight: 700;
+				font-weight: 800;
+				font-size: 0.95rem;
+				line-height: 1.2;
+			}
+			.related-meta {
+				font-size: 0.75rem;
+				opacity: 0.7;
+				margin-top: 2px;
+				font-weight: 600;
+			}
+			.related-arrow {
+				font-weight: 800;
+				font-size: 1.2rem;
+				opacity: 0.7;
+			}
+
+			/* ─── RESPONSIVE ─────────────────────────────── */
+			@media (max-width: 960px) {
+				.detail-container {
+					grid-template-columns: 1fr;
+					gap: 32px;
+				}
+				.quick-stats {
+					grid-template-columns: 1fr 1fr;
+				}
+			}
+			@media (max-width: 640px) {
+				.hero-top {
+					flex-direction: column;
+					align-items: flex-start;
+					gap: 16px;
+				}
+				.hero-actions {
+					width: 100%;
+					justify-content: flex-start;
+				}
+				.btn-primary {
+					flex-grow: 1;
+					justify-content: center;
+				}
+				.features-grid {
+					grid-template-columns: 1fr;
+				}
+				.pricing-grid {
+					grid-template-columns: 1fr;
+				}
+				.quick-stats {
+					grid-template-columns: 1fr 1fr;
+				}
+			}
+
+			/* ─── REVIEWS SECTION ───────────────────────── */
+			.reviews-container {
+				display: flex;
+				flex-direction: column;
+				gap: 24px;
+			}
+			.reviews-list {
+				display: flex;
+				flex-direction: column;
+				gap: 16px;
+				margin-bottom: 12px;
+			}
+			.review-card {
+				background: #ffffff;
+				border: 2px solid var(--color-accent);
+				border-radius: 16px;
+				box-shadow: 4px 4px 0px var(--color-accent);
+				padding: 20px;
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+				transition: transform 0.15s ease;
+			}
+			.review-card:hover {
+				transform: translate(-1px, -1px);
+				box-shadow: 5px 5px 0px var(--color-accent);
+			}
+			.review-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				flex-wrap: wrap;
+				gap: 8px;
+			}
+			.review-user {
+				font-weight: 800;
+				font-size: 1.05rem;
+			}
+			.review-date {
+				font-size: 0.8rem;
+				opacity: 0.6;
+				font-weight: 600;
+			}
+			.review-comment {
+				font-size: 0.95rem;
+				line-height: 1.5;
+				margin: 0;
+			}
+			.review-stars {
+				color: #FACC15;
 				font-size: 1rem;
+				display: flex;
+				gap: 2px;
+			}
+
+			/* REVIEW FORM */
+			.review-form-card {
+				background: #FAF2EA;
+				border: 2px solid var(--color-accent);
+				border-radius: 20px;
+				box-shadow: 4px 4px 0px var(--color-accent);
+				padding: 24px;
+				margin-top: 12px;
+			}
+			.form-title {
+				font-size: 1.3rem;
+				font-weight: 800;
+				margin-bottom: 16px;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+			.form-group {
+				display: flex;
+				flex-direction: column;
+				gap: 6px;
+				margin-bottom: 16px;
+			}
+			.form-label {
+				font-size: 0.85rem;
+				font-weight: 800;
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+			}
+			.form-input {
+				background: #ffffff;
+				border: 2px solid var(--color-accent);
+				border-radius: 10px;
+				padding: 10px 14px;
+				font-size: 0.95rem;
+				font-family: inherit;
+				box-shadow: 2px 2px 0px var(--color-accent);
+				outline: none;
+				transition: all 0.1s ease;
+			}
+			.form-input:focus {
+				box-shadow: 4px 4px 0px var(--color-accent);
+				transform: translate(-1px, -1px);
+			}
+			.form-textarea {
+				min-height: 100px;
+				resize: vertical;
+			}
+			
+			/* STAR INPUT */
+			.star-input-container {
+				display: flex;
+				gap: 6px;
+				font-size: 1.8rem;
+				color: #D1D5DB;
+				cursor: pointer;
+				user-select: none;
+				margin-bottom: 4px;
+			}
+			.star-input-btn {
+				transition: transform 0.1s ease, color 0.1s ease;
+			}
+			.star-input-btn:hover {
+				transform: scale(1.15);
+			}
+			.star-input-btn.active {
+				color: #FACC15;
+			}
+
+			/* STATUS MESSAGES */
+			.review-status {
+				padding: 12px 16px;
+				border-radius: 10px;
+				border: 2px solid var(--color-accent);
+				font-size: 0.9rem;
+				font-weight: 700;
+				margin-top: 12px;
+				display: none;
+			}
+			.review-status.success {
+				background: #D1FAE5;
+				color: #065F46;
+				box-shadow: 2px 2px 0px var(--color-accent);
+			}
+			.review-status.error {
+				background: #FEE2E2;
+				color: #991B1B;
+				box-shadow: 2px 2px 0px var(--color-accent);
+			}
+			.review-status.loading {
+				background: #FEF3C7;
+				color: #92400E;
+				box-shadow: 2px 2px 0px var(--color-accent);
+			}
+			
+			.empty-reviews {
+				text-align: center;
+				padding: 30px 20px;
+				background: #FAF2EA;
+				border: 2px dashed var(--color-accent);
+				border-radius: 16px;
+				font-weight: 700;
+				color: var(--color-accent);
+				opacity: 0.8;
 			}
 		</style>
 	</head>
 	<body>
 		<Header />
 		<main>
-			<div class="detail-container">
-				<article class="detail-main">
-					<div class="tool-header-area">
-						<div class="tool-detail-logo" style={tool.data.accentColor ? `border-color: ${tool.data.accentColor}; background-color: ${tool.data.accentColor}10` : ''}>
-							<ToolLogo name={tool.data.name} style={tool.data.accentColor ? `color: ${tool.data.accentColor}` : ''} />
-						</div>
-						<div class="tool-meta-title">
-							<h1>{tool.data.name}</h1>
-							<p><span data-i18n="tools.creator">By</span> {tool.data.creator}</p>
-						</div>
-					</div>
-					<div class="prose">
-						<Content />
-					</div>
-				</article>
+			<!-- BREADCRUMB -->
+			<div class="breadcrumb">
+				<a href="/" data-i18n="nav.home">Home</a>
+				<span>›</span>
+				<span class="lang-id">Alat AI</span>
+				<span class="lang-en">AI Tools</span>
+				<span>›</span>
+				<a href={`/category?c=${tool.data.category}`}>{tool.data.category}</a>
+				<span>›</span>
+				<span style="opacity:0.6">{tool.data.name}</span>
+			</div>
 
-				<aside class="detail-sidebar">
-					<div class="sidebar-card">
-						<div class="stat-item">
-							<div class="stat-label" data-i18n="detail.category">Category</div>
-							<div class="stat-value">{tool.data.category}</div>
+			<!-- GRID CONTAINER -->
+			<div class="detail-container">
+				
+				<!-- MAIN COLUMN (LEFT) -->
+				<div class="main-column">
+					
+					<!-- HERO CARD -->
+					<div class="hero-card">
+						<div class="hero-top">
+							<div class="hero-left">
+								<div class="tool-badges">
+									<span class="badge badge-category">{tool.data.category}</span>
+									{tool.data.featured && (
+										<span class="badge badge-featured">
+											★ <span class="lang-id">Unggulan</span><span class="lang-en">Featured</span>
+										</span>
+									)}
+									{(tool.data.name.toLowerCase() === 'kiro' || tool.data.name.toLowerCase() === 'cursor') && (
+										<span class="badge badge-hot">🔥 <span class="lang-id">Trending</span><span class="lang-en">Trending</span></span>
+									)}
+								</div>
+								<div class="hero-brand-row">
+									<div class="tool-detail-logo" style={tool.data.accentColor ? `border-color: ${tool.data.accentColor}; background-color: ${tool.data.accentColor}10` : ''}>
+										<ToolLogo name={tool.data.name} style={tool.data.accentColor ? `color: ${tool.data.accentColor}` : ''} />
+									</div>
+									<div class="tool-meta-title">
+										<h1>{tool.data.name}</h1>
+										<div class="tool-creator">
+											<span data-i18n="tools.creator">By</span> {tool.data.creator}
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="hero-actions">
+								<button class="btn-bookmark" aria-label="Save tool" onclick="alert('Tool saved to bookmarks!')">
+									<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+								</button>
+							</div>
 						</div>
-						<div class="stat-item">
-							<div class="stat-label" data-i18n="detail.pricing">Pricing</div>
-							<div class="stat-value">{tool.data.price}</div>
+						<div class="hero-divider"></div>
+						<div class="tool-desc prose">
+							<Content />
 						</div>
-						<div class="stat-item">
-							<div class="stat-label" data-i18n="detail.highlight">Key Highlight</div>
-							<div class="stat-value">
-								<span class="lang-id">{tool.data.value}</span>
-								<span class="lang-en">{tool.data.valueEn}</span>
+					</div>
+
+					<!-- QUICK STATS -->
+					<div class="quick-stats">
+						<div class="stat-card">
+							<span class="stat-label" data-i18n="detail.pricing">Pricing</span>
+							<span class="stat-value green">
+								{(() => {
+									const formatted = formatPricePart(tool.data.price.split(' / ')[0]);
+									return (
+										<>
+											<span class="lang-id">{formatted.id}</span>
+											<span class="lang-en">{formatted.en}</span>
+										</>
+									);
+								})()}
+							</span>
+							<span class="stat-sub">
+								{tool.data.price.split(' / ')[1] ? (() => {
+									const formatted = formatPricePart(tool.data.price.split(' / ')[1]);
+									return (
+										<>
+											<span class="lang-id">{formatted.id}</span>
+											<span class="lang-en">{formatted.en}</span>
+										</>
+									);
+								})() : ''}
+							</span>
+						</div>
+						<div class="stat-card">
+								<span class="stat-label">Platform</span>
+								<span class="stat-value">
+									{tool.data.platforms && tool.data.platforms[0] ? (
+										tool.data.platforms.includes('Windows') && tool.data.platforms.includes('macOS') ? (
+											<><span class="lang-id">Desktop</span><span class="lang-en">Desktop</span></>
+										) : tool.data.platforms[0]
+									) : <><span class="lang-id">Web</span><span class="lang-en">Web</span></>}
+							</span>
+							<span class="stat-sub">
+								{tool.data.platforms ? tool.data.platforms.join(' · ') : (
+									<><span class="lang-id">Berbasis Browser</span><span class="lang-en">Browser-based</span></>
+								)}
+							</span>
+						</div>
+						<div class="stat-card">
+							<span class="stat-label"><span class="lang-id">Berbasis</span><span class="lang-en">Based On</span></span>
+							<span class="stat-value" style={tool.data.accentColor ? `color: ${tool.data.accentColor}` : ''}>
+								{tool.data.basedOn || 'Cloud API'}
+							</span>
+							<span class="stat-sub">
+								{tool.data.license || 'Proprietary'}
+							</span>
+						</div>
+						<div class="stat-card">
+							<span class="stat-label"><span class="lang-id">Model AI</span><span class="lang-en">AI Models</span></span>
+							<span class="stat-value">{tool.data.aiModels || 'GPT / Claude'}</span>
+							<span class="stat-sub">
+								<span class="lang-id">Peluncuran:</span>
+								<span class="lang-en">Launch:</span> {tool.data.launchYear || 'N/A'}
+							</span>
+						</div>
+					</div>
+
+					<!-- KEY FEATURES -->
+					{tool.data.features && (
+						<div class="neo-section">
+							<div class="section-title">
+								<div class="section-title-dot"></div>
+								<span class="lang-id">Fitur Utama</span>
+								<span class="lang-en">Key Features</span>
+							</div>
+							<div class="features-grid">
+								{tool.data.features.map((feature) => (
+									<div class="feature-item">
+										<div class="feature-icon-box">{feature.icon}</div>
+										<div class="feature-name lang-id">{feature.name}</div>
+										<div class="feature-name lang-en">{feature.nameEn}</div>
+										<p class="feature-desc lang-id">{feature.desc}</p>
+										<p class="feature-desc lang-en">{feature.descEn}</p>
+									</div>
+								))}
+							</div>
+						</div>
+					)}
+
+					<!-- PRICING TABLE / SLIDER -->
+					{tool.data.pricing && (
+						<div class="neo-section" data-plans-monthly={JSON.stringify(tool.data.pricing.monthly)} data-plans-annual={JSON.stringify(tool.data.pricing.annual)}>
+							<div class="pricing-switcher-wrapper">
+								<div class="section-title" style="margin-bottom:0">
+									<div class="section-title-dot"></div>
+									<span class="lang-id">Paket Harga</span>
+									<span class="lang-en">Pricing Plans</span>
+								</div>
+								
+								<div class="pricing-tabs">
+									<div class="pricing-tab active" data-pricing-type="monthly">
+										<span class="lang-id">Bulanan</span>
+										<span class="lang-en">Monthly</span>
+									</div>
+									<div class="pricing-tab" data-pricing-type="annual">
+										<span class="lang-id">Tahunan</span>
+										<span class="lang-en">Annual</span>
+										<span class="annual-save-badge"><span class="lang-id">Hemat 20%</span><span class="lang-en">Save 20%</span></span>
+									</div>
+								</div>
+							</div>
+
+							{tool.data.pricing.monthly.length <= 3 ? (
+								// STANDARD GRID FOR <= 3 PLANS
+								<div>
+									<div class="pricing-pane active" id="pane-monthly-grid">
+										<div class="pricing-grid">
+											{tool.data.pricing.monthly.map((plan) => (
+												<div class={`pricing-card ${plan.popular ? 'popular' : ''}`}>
+													{plan.popular && (
+														<span class="popular-badge">
+															<span class="lang-id">Populer</span>
+															<span class="lang-en">Popular</span>
+														</span>
+													)}
+													<div class="plan-name">
+														{plan.name === 'Free' ? (
+															<><span class="lang-id">Gratis</span><span class="lang-en">Free</span></>
+														) : plan.name}
+													</div>
+													<div class="plan-tagline lang-id">{plan.tagline}</div>
+													<div class="plan-tagline lang-en">{plan.taglineEn}</div>
+													<div class="plan-price">
+														<span class="price-amount" style={plan.price === '$0' ? 'color:#10B981' : ''}>{plan.price}</span>
+														<span class="price-period lang-id">{plan.period}</span>
+														<span class="price-period lang-en">{plan.periodEn}</span>
+													</div>
+													<div class="price-annual-note lang-id">{plan.annualNote}</div>
+													<div class="price-annual-note lang-en">{plan.annualNoteEn}</div>
+													<button class={`plan-cta ${plan.popular ? 'cta-accent' : 'cta-outline'}`}>
+														<span class="lang-id">{plan.ctaText}</span>
+														<span class="lang-en">{plan.ctaTextEn}</span>
+													</button>
+													<div class="plan-divider"></div>
+													<div class="plan-features">
+														{plan.features.map((f, idx) => (
+															<div class="plan-feature">
+																<span class="check">✓</span>
+																<span class="lang-id">{f}</span>
+																<span class="lang-en">{plan.featuresEn[idx]}</span>
+															</div>
+														))}
+													</div>
+												</div>
+											))}
+										</div>
+									</div>
+
+									<div class="pricing-pane" id="pane-annual-grid">
+										<div class="pricing-grid">
+											{tool.data.pricing.annual.map((plan) => (
+												<div class={`pricing-card ${plan.popular ? 'popular' : ''}`}>
+													{plan.popular && (
+														<span class="popular-badge">
+															<span class="lang-id">Populer</span>
+															<span class="lang-en">Popular</span>
+														</span>
+													)}
+													<div class="plan-name">
+														{plan.name === 'Free' ? (
+															<><span class="lang-id">Gratis</span><span class="lang-en">Free</span></>
+														) : plan.name}
+													</div>
+													<div class="plan-tagline lang-id">{plan.tagline}</div>
+													<div class="plan-tagline lang-en">{plan.taglineEn}</div>
+													<div class="plan-price">
+														<span class="price-amount" style={plan.price === '$0' ? 'color:#10B981' : ''}>{plan.price}</span>
+														<span class="price-period lang-id">{plan.period}</span>
+														<span class="price-period lang-en">{plan.periodEn}</span>
+													</div>
+													<div class="price-annual-note lang-id">{plan.annualNote}</div>
+													<div class="price-annual-note lang-en">{plan.annualNoteEn}</div>
+													<button class={`plan-cta ${plan.popular ? 'cta-accent' : 'cta-outline'}`}>
+														<span class="lang-id">{plan.ctaText}</span>
+														<span class="lang-en">{plan.ctaTextEn}</span>
+													</button>
+													<div class="plan-divider"></div>
+													<div class="plan-features">
+														{plan.features.map((f, idx) => (
+															<div class="plan-feature">
+																<span class="check">✓</span>
+																<span class="lang-id">{f}</span>
+																<span class="lang-en">{plan.featuresEn[idx]}</span>
+															</div>
+														))}
+													</div>
+												</div>
+											))}
+										</div>
+									</div>
+								</div>
+							) : (
+								// SLIDER GRID FOR > 3 PLANS
+								<div class="neo-slider-container">
+									<div class="neo-slider-wrapper">
+										<input type="range" id="pricing-slider-input" min="0" max={tool.data.pricing.monthly.length - 1} value="1" class="neo-slider" />
+									</div>
+									<div class="neo-slider-labels">
+										{tool.data.pricing.monthly.map((plan, idx) => (
+											<span class={`neo-slider-label ${idx === 1 ? 'active' : ''}`} data-index={idx}>
+												{plan.name === 'Free' ? (
+													<><span class="lang-id">Gratis</span><span class="lang-en">Free</span></>
+												) : plan.name}
+											</span>
+										))}
+									</div>
+
+									<div class="slider-card-wrapper">
+										<div class="pricing-card popular" id="slider-pricing-card">
+											<span class="popular-badge" id="slider-popular-badge">Populer</span>
+											<div class="plan-name" id="slider-plan-name">
+												{tool.data.pricing.monthly[1]?.name === 'Free' ? (
+													<><span class="lang-id">Gratis</span><span class="lang-en">Free</span></>
+												) : tool.data.pricing.monthly[1]?.name}
+											</div>
+											<div class="plan-tagline lang-id" id="slider-plan-tagline-id">Untuk pengembang profesional</div>
+											<div class="plan-tagline lang-en" id="slider-plan-tagline-en">For serious developers</div>
+											<div class="plan-price">
+												<span class="price-amount" id="slider-price-amount">$20</span>
+												<span class="price-period lang-id" id="slider-price-period-id">/bln</span>
+												<span class="price-period lang-en" id="slider-price-period-en">/mo</span>
+											</div>
+											<div class="price-annual-note lang-id" id="slider-price-note-id">Ditagih bulanan, batalkan kapan saja</div>
+											<div class="price-annual-note lang-en" id="slider-price-note-en">Billed monthly, cancel anytime</div>
+											<button class="plan-cta cta-accent" id="slider-plan-cta">
+												<span class="lang-id" id="slider-cta-text-id">Mulai Uji Coba Pro</span>
+												<span class="lang-en" id="slider-cta-text-en">Start Pro Trial</span>
+											</button>
+											<div class="plan-divider"></div>
+											<div class="plan-features" id="slider-features-list">
+												<!-- Populated dynamically via JS -->
+											</div>
+										</div>
+									</div>
+								</div>
+							)}
+
+							<p class="pricing-note">
+								⚠️ <span class="lang-id">Info harga bersumber dari data publik. Harap verifikasi langsung di situs resmi {tool.data.name}.</span>
+								<span class="lang-en">Pricing info is sourced from public data. Please verify directly on the official {tool.data.name} website.</span>
+							</p>
+						</div>
+					)}
+
+					<!-- HOW TO GET STARTED (STEPS) -->
+					{tool.data.steps && (
+						<div class="neo-section">
+							<div class="section-title">
+								<div class="section-title-dot"></div>
+								<span class="lang-id">Cara Memulai</span>
+								<span class="lang-en">How to Get Started</span>
+							</div>
+							<div class="steps">
+								{tool.data.steps.map((step, idx) => (
+									<div class="step-card">
+										<div class="step-num">{idx + 1}</div>
+										<div class="step-title lang-id">{step.title}</div>
+										<div class="step-title lang-en">{step.titleEn}</div>
+										<p class="step-desc lang-id">{step.desc}</p>
+										<p class="step-desc lang-en">{step.descEn}</p>
+										{step.code && (
+											<div class="step-code">{step.code}</div>
+										)}
+									</div>
+								))}
+							</div>
+						</div>
+					)}
+
+					<!-- COMPARISONS TABLE -->
+					{tool.data.comparisons && (
+						<div class="neo-section">
+							<div class="section-title">
+								<div class="section-title-dot"></div>
+								<span class="lang-id">Perbandingan Alat</span>
+								<span class="lang-en">How it Compares</span>
+							</div>
+							<div class="table-wrapper">
+								<table class="comparisons-table">
+									<thead>
+										<tr>
+											<th><span class="lang-id">Alat</span><span class="lang-en">Tool</span></th>
+											<th style="text-align:center">Spec-Driven</th>
+											<th><span class="lang-id">Editor Dasar</span><span class="lang-en">Base Editor</span></th>
+											<th style="text-align:center"><span class="lang-id">Tier Gratis</span><span class="lang-en">Free Tier</span></th>
+											<th><span class="lang-id">Harga Mulai</span><span class="lang-en">Starting Price</span></th>
+										</tr>
+									</thead>
+									<tbody>
+										{tool.data.comparisons.map((row) => (
+											<tr class={row.name.toLowerCase() === tool.data.name.toLowerCase() ? 'highlighted' : ''}>
+												<td style={row.name.toLowerCase() === tool.data.name.toLowerCase() && tool.data.accentColor ? `color: ${tool.data.accentColor}` : ''}>
+													{row.name}
+												</td>
+												<td style="text-align:center">
+													{row.specDriven ? <span class="check-icon">✓</span> : <span class="cross-icon">–</span>}
+												</td>
+												<td>{row.baseEditor}</td>
+												<td style="text-align:center">
+													{row.freeTier ? <span class="check-icon">✓</span> : <span class="cross-icon">–</span>}
+												</td>
+												<td>{row.startingPrice}</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+						</div>
+					)}
+
+					<!-- REVIEWS SECTION -->
+					<div class="neo-section" id="reviews-container" data-supabase-url={import.meta.env.PUBLIC_SUPABASE_URL} data-supabase-key={import.meta.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY} data-tool-slug={tool.id}>
+						<div class="section-title">
+							<div class="section-title-dot"></div>
+							<span class="lang-id">Ulasan Pengguna</span>
+							<span class="lang-en">User Reviews</span>
+						</div>
+
+						<div class="reviews-container">
+							<!-- Reviews list will be loaded here dynamically -->
+							<div id="reviews-list" class="reviews-list">
+								<div class="review-status loading" style="display: block;">
+									<span class="lang-id">Memuat ulasan...</span>
+									<span class="lang-en">Loading reviews...</span>
+								</div>
+							</div>
+
+							<!-- Write Review Form -->
+							<div class="review-form-card" id="write-review-section">
+								<div class="form-title">
+									✍️ 
+									<span class="lang-id">Tulis Ulasan Anda</span>
+									<span class="lang-en">Write Your Review</span>
+								</div>
+								
+								<form id="review-form" novalidate>
+									<div class="form-group">
+										<label class="form-label">
+											<span class="lang-id">Rating</span>
+											<span class="lang-en">Rating</span>
+										</label>
+										<div class="star-input-container" id="star-rating-input">
+											<span class="star-input-btn" data-value="1">★</span>
+											<span class="star-input-btn" data-value="2">★</span>
+											<span class="star-input-btn" data-value="3">★</span>
+											<span class="star-input-btn" data-value="4">★</span>
+											<span class="star-input-btn" data-value="5">★</span>
+										</div>
+										<input type="hidden" name="rating" id="selected-rating" value="5" />
+									</div>
+
+									<div class="form-group">
+										<label class="form-label" for="review-name">
+											<span class="lang-id">Nama Anda</span>
+											<span class="lang-en">Your Name</span>
+										</label>
+										<input type="text" id="review-name" name="name" class="form-input" required placeholder="Masukkan nama..." />
+									</div>
+
+									<div class="form-group">
+										<label class="form-label" for="review-comment">
+											<span class="lang-id">Ulasan</span>
+											<span class="lang-en">Review Comment</span>
+										</label>
+										<textarea id="review-comment" name="comment" class="form-input form-textarea" required placeholder="Ceritakan pengalaman Anda..."></textarea>
+									</div>
+
+									<button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 8px;">
+										<span class="lang-id">Kirim Ulasan 🚀</span>
+										<span class="lang-en">Submit Review 🚀</span>
+									</button>
+								</form>
+
+								<div id="form-status" class="review-status"></div>
 							</div>
 						</div>
 					</div>
 
-					<a href={tool.data.url} target="_blank" class="action-btn">
-						<span class="lang-id">Kunjungi Situs Web {tool.data.name} ↗</span>
-						<span class="lang-en">Visit {tool.data.name} Website ↗</span>
-					</a>
+				</div>
 
+				<!-- SIDEBAR COLUMN (RIGHT) -->
+				<div class="detail-sidebar">
+					
+					<!-- INFO CARD -->
+					<div class="sidebar-card">
+						<div class="sidebar-title"><span class="lang-id">Info Alat</span><span class="lang-en">Tool Info</span></div>
+						<div class="meta-list">
+							<div class="meta-row">
+								<span class="meta-key" data-i18n="detail.category">Category</span>
+								<span class="meta-val">{tool.data.category}</span>
+							</div>
+							<div class="meta-row">
+								<span class="meta-key" data-i18n="detail.pricing">Pricing</span>
+								<span class="meta-val">
+									{(() => {
+										const parts = tool.data.price.split(' / ');
+										const first = formatPricePart(parts[0]);
+										const second = parts[1] ? formatPricePart(parts[1]) : null;
+										return (
+											<>
+												<span class="lang-id">{first.id}{second ? ` / ${second.id}` : ''}</span>
+												<span class="lang-en">{first.en}{second ? ` / ${second.en}` : ''}</span>
+											</>
+										);
+									})()}
+								</span>
+							</div>
+							<div class="meta-row">
+								<span class="meta-key" data-i18n="detail.highlight">Key Highlight</span>
+								<span class="meta-val">
+									<span class="lang-id">{tool.data.value}</span>
+									<span class="lang-en">{tool.data.valueEn}</span>
+								</span>
+							</div>
+							<div class="meta-row">
+								<span class="meta-key"><span class="lang-id">Pengembang</span><span class="lang-en">Developer</span></span>
+								<span class="meta-val">{tool.data.creator}</span>
+							</div>
+							<div class="meta-row">
+								<span class="meta-key"><span class="lang-id">Tahun Rilis</span><span class="lang-en">Launch Year</span></span>
+								<span class="meta-val">{tool.data.launchYear || 'N/A'}</span>
+							</div>
+							<div class="meta-row">
+								<span class="meta-key"><span class="lang-id">Lisensi</span><span class="lang-en">License</span></span>
+								<span class="meta-val">{tool.data.license || 'Proprietary'}</span>
+							</div>
+						</div>
+						<a href={tool.data.url} target="_blank" class="action-btn" style="margin-top:20px">
+							<span class="lang-id">Kunjungi {tool.data.name} ↗</span>
+							<span class="lang-en">Visit {tool.data.name} ↗</span>
+						</a>
+					</div>
+
+					<!-- AVAILABLE ON PLATFORMS -->
+					<div class="sidebar-card">
+						<div class="sidebar-title"><span class="lang-id">Tersedia Di</span><span class="lang-en">Available On</span></div>
+						<div class="platform-chips">
+							{tool.data.platforms ? (
+								tool.data.platforms.map((platform) => (
+									<div class="platform-chip">
+										{platform === 'Windows' && '🪟'}
+										{platform === 'macOS' && '🍎'}
+										{platform === 'Linux' && '🐧'}
+										{platform === 'Web' && '🌐'}
+										{platform === 'iOS' && '📱'}
+										{platform === 'Android' && '🤖'}
+										{platform}
+									</div>
+								))
+							) : (
+								<div class="platform-chip">🌐 Web</div>
+							)}
+						</div>
+					</div>
+
+					<!-- COMMUNITY RATING -->
+					<div class="sidebar-card">
+						<div class="sidebar-title"><span class="lang-id">Rating Komunitas</span><span class="lang-en">Community Rating</span></div>
+						<div class="rating-summary">
+							<div class="rating-num">{tool.data.rating || '4.7'}</div>
+							<div>
+								<div class="rating-stars">
+									{'★★★★★'.split('').map((star, idx) => (
+										<span style={idx < Math.round(tool.data.rating || 4.7) ? '' : 'color:#D1D5DB'}>★</span>
+									))}
+								</div>
+								<div class="rating-count"><span class="lang-id">dari {tool.data.ratingCount || '320'} ulasan</span><span class="lang-en">from {tool.data.ratingCount || '320'} reviews</span></div>
+							</div>
+						</div>
+						
+						<div class="rating-bars">
+							<div class="rating-bar-row">
+								<span class="rating-bar-label">5</span>
+								<div class="rating-bar-track">
+									<div class="rating-bar-fill" style="width: 70%"></div>
+								</div>
+								<span class="rating-bar-count">70%</span>
+							</div>
+							<div class="rating-bar-row">
+								<span class="rating-bar-label">4</span>
+								<div class="rating-bar-track">
+									<div class="rating-bar-fill" style="width: 18%"></div>
+								</div>
+								<span class="rating-bar-count">18%</span>
+							</div>
+							<div class="rating-bar-row">
+								<span class="rating-bar-label">3</span>
+								<div class="rating-bar-track">
+									<div class="rating-bar-fill" style="width: 8%"></div>
+								</div>
+								<span class="rating-bar-count">8%</span>
+							</div>
+							<div class="rating-bar-row">
+								<span class="rating-bar-label">2</span>
+								<div class="rating-bar-track">
+									<div class="rating-bar-fill" style="width: 3%"></div>
+								</div>
+								<span class="rating-bar-count">3%</span>
+							</div>
+							<div class="rating-bar-row">
+								<span class="rating-bar-label">1</span>
+								<div class="rating-bar-track">
+									<div class="rating-bar-fill" style="width: 1%"></div>
+								</div>
+								<span class="rating-bar-count">1%</span>
+							</div>
+						</div>
+						<button class="btn-review" id="sidebar-write-review-btn"><span class="lang-id">Tulis Ulasan</span><span class="lang-en">Write a Review</span></button>
+					</div>
+
+					<!-- RELATED TOOLS -->
 					{relatedTools.length > 0 && (
 						<div class="sidebar-card">
-							<h3 class="related-title" data-i18n="detail.related">Related Tools</h3>
+							<div class="sidebar-title" data-i18n="detail.related">Related Tools</div>
 							<div class="related-list">
 								{relatedTools.map((t) => (
 									<a href={`/tools/${t.id}/`} class="related-item">
-										<div class="related-logo" style={t.data.accentColor ? `border-color: ${t.data.accentColor}; background-color: ${t.data.accentColor}10` : ''}>
-											<ToolLogo name={t.data.name} style={t.data.accentColor ? `color: ${t.data.accentColor}` : ''} />
+										<div class="related-left">
+											<div class="related-logo" style={t.data.accentColor ? `border-color: ${t.data.accentColor}; background-color: ${t.data.accentColor}10` : ''}>
+												<ToolLogo name={t.data.name} style={t.data.accentColor ? `color: ${t.data.accentColor}` : ''} />
+											</div>
+											<div class="related-details">
+												<span class="related-name">{t.data.name}</span>
+												<span class="related-meta">
+													{t.data.category} · {(() => {
+														const formatted = formatPricePart(t.data.price.split(' / ')[0]);
+														return (
+															<>
+																<span class="lang-id">{formatted.id}</span>
+																<span class="lang-en">{formatted.en}</span>
+															</>
+														);
+													})()}
+												</span>
+											</div>
 										</div>
-										<div class="related-name">{t.data.name}</div>
+										<span class="related-arrow">›</span>
 									</a>
 								))}
 							</div>
 						</div>
 					)}
-				</aside>
+
+				</div>
+
 			</div>
 		</main>
 		<Footer />
+
+		<!-- JS FOR SWITCHER AND SLIDER -->
+		<script>
+			// Pricing plans Switcher & Slider controller
+			document.addEventListener('DOMContentLoaded', () => {
+				const section = document.querySelector('[data-plans-monthly]');
+				if (!section) return;
+
+				const monthlyPlans = JSON.parse(section.getAttribute('data-plans-monthly') || '[]');
+				const annualPlans = JSON.parse(section.getAttribute('data-plans-annual') || '[]');
+				
+				let currentType = 'monthly'; // 'monthly' or 'annual'
+				let currentIndex = 1; // Default selected index for slider (usually Pro/1)
+
+				const tabs = document.querySelectorAll('.pricing-tab');
+				const sliderInput = document.getElementById('pricing-slider-input') as HTMLInputElement;
+				const sliderLabels = document.querySelectorAll('.neo-slider-label');
+
+				// DOM Elements for slider card
+				const badge = document.getElementById('slider-popular-badge');
+				const planName = document.getElementById('slider-plan-name');
+				const taglineId = document.getElementById('slider-plan-tagline-id');
+				const taglineEn = document.getElementById('slider-plan-tagline-en');
+				const priceAmount = document.getElementById('slider-price-amount');
+				const periodId = document.getElementById('slider-price-period-id');
+				const periodEn = document.getElementById('slider-price-period-en');
+				const noteId = document.getElementById('slider-price-note-id');
+				const noteEn = document.getElementById('slider-price-note-en');
+				const ctaTextId = document.getElementById('slider-cta-text-id');
+				const ctaTextEn = document.getElementById('slider-cta-text-en');
+				const ctaButton = document.getElementById('slider-plan-cta');
+				const featuresList = document.getElementById('slider-features-list');
+
+				function updateSliderCard() {
+					if (!sliderInput) return;
+					const plans = currentType === 'monthly' ? monthlyPlans : annualPlans;
+					const plan = plans[currentIndex];
+
+					if (!plan) return;
+
+					// Update popular badge
+					if (plan.popular) {
+						badge.style.display = 'block';
+						badge.textContent = document.documentElement.lang === 'en' ? 'Popular' : 'Populer';
+						ctaButton.className = 'plan-cta cta-accent';
+					} else {
+						badge.style.display = 'none';
+						ctaButton.className = 'plan-cta cta-outline';
+					}
+
+					// Update static info
+					if (plan.name === 'Free') {
+						planName.innerHTML = '<span class="lang-id">Gratis</span><span class="lang-en">Free</span>';
+					} else {
+						planName.textContent = plan.name;
+					}
+					taglineId.textContent = plan.tagline;
+					taglineEn.textContent = plan.taglineEn;
+					priceAmount.textContent = plan.price;
+					periodId.textContent = plan.period;
+					periodEn.textContent = plan.periodEn;
+					noteId.textContent = plan.annualNote;
+					noteEn.textContent = plan.annualNoteEn;
+					ctaTextId.textContent = plan.ctaText;
+					ctaTextEn.textContent = plan.ctaTextEn;
+
+					// Rebuild features list
+					featuresList.innerHTML = '';
+					plan.features.forEach((featureText, idx) => {
+						const fDiv = document.createElement('div');
+						fDiv.className = 'plan-feature';
+						fDiv.innerHTML = `
+							<span class="check">✓</span>
+							<span class="lang-id">${featureText}</span>
+							<span class="lang-en">${plan.featuresEn[idx]}</span>
+						`;
+						featuresList.appendChild(fDiv);
+					});
+
+					// Update label active class
+					sliderLabels.forEach((lbl, idx) => {
+						if (idx === currentIndex) {
+							lbl.classList.add('active');
+						} else {
+							lbl.classList.remove('active');
+						}
+					});
+				}
+
+				// Tab Toggling (Monthly / Annual)
+				tabs.forEach(tab => {
+					tab.addEventListener('click', () => {
+						tabs.forEach(t => t.classList.remove('active'));
+						tab.classList.add('active');
+						
+						const type = tab.getAttribute('data-pricing-type');
+						currentType = type;
+
+						// If standard grids exist, toggle them
+						const monthlyGrid = document.getElementById('pane-monthly-grid');
+						const annualGrid = document.getElementById('pane-annual-grid');
+
+						if (monthlyGrid && annualGrid) {
+							if (type === 'monthly') {
+								monthlyGrid.classList.add('active');
+								annualGrid.classList.remove('active');
+							} else {
+								monthlyGrid.classList.remove('active');
+								annualGrid.classList.add('active');
+							}
+						} else {
+							// Update the slider card
+							updateSliderCard();
+						}
+					});
+				});
+
+				// Slider Range Input Listener
+				if (sliderInput) {
+					sliderInput.addEventListener('input', (e) => {
+						currentIndex = parseInt((e.target as HTMLInputElement).value);
+						updateSliderCard();
+					});
+
+					// Slider label clicking
+					sliderLabels.forEach(label => {
+						label.addEventListener('click', () => {
+							const idx = parseInt(label.getAttribute('data-index') || '0');
+							currentIndex = idx;
+							sliderInput.value = idx.toString();
+							updateSliderCard();
+						});
+					});
+
+					// Initial load for slider card
+					updateSliderCard();
+				}
+			});
+		</script>
+
+		<!-- JS FOR SUPABASE REVIEWS -->
+		<script>
+			import { createClient } from '@supabase/supabase-js';
+
+			document.addEventListener('DOMContentLoaded', () => {
+				const container = document.getElementById('reviews-container');
+				if (!container) return;
+
+				const supabaseUrl = container.getAttribute('data-supabase-url');
+				const supabaseKey = container.getAttribute('data-supabase-key');
+				const toolSlug = container.getAttribute('data-tool-slug');
+
+				if (!supabaseUrl || !supabaseKey || !toolSlug) {
+					console.error('Supabase configuration missing');
+					return;
+				}
+
+				const supabase = createClient(supabaseUrl, supabaseKey);
+
+				const reviewsList = document.getElementById('reviews-list');
+				const reviewForm = document.getElementById('review-form') as HTMLFormElement;
+				const formStatus = document.getElementById('form-status');
+				const starRatingInput = document.getElementById('star-rating-input');
+				const selectedRatingInput = document.getElementById('selected-rating') as HTMLInputElement;
+				
+				// Sidebar Rating DOM Elements
+				const sidebarRatingNum = document.querySelector('.rating-num');
+				const sidebarRatingCount = document.querySelector('.rating-count');
+				const sidebarRatingStars = document.querySelector('.rating-summary .rating-stars');
+				const sidebarRatingBars = document.querySelectorAll('.rating-bar-row');
+				const sidebarWriteBtn = document.getElementById('sidebar-write-review-btn');
+
+				// Scroll to write review form smoothly
+				if (sidebarWriteBtn) {
+					sidebarWriteBtn.addEventListener('click', (e) => {
+						e.preventDefault();
+						const formSection = document.getElementById('write-review-section');
+						if (formSection) {
+							formSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+							// Highlight name input
+							const nameInput = document.getElementById('review-name');
+							if (nameInput) nameInput.focus();
+						}
+					});
+				}
+
+				// Interactive Star Rating Form Input
+				if (starRatingInput) {
+					const stars = starRatingInput.querySelectorAll('.star-input-btn');
+					
+					function highlightStars(ratingValue: number) {
+						stars.forEach(star => {
+							const val = parseInt(star.getAttribute('data-value') || '0');
+							if (val <= ratingValue) {
+								star.classList.add('active');
+							} else {
+								star.classList.remove('active');
+							}
+						});
+					}
+
+					// Initial highlight (default value = 5)
+					highlightStars(parseInt(selectedRatingInput.value));
+
+					stars.forEach(star => {
+						star.addEventListener('click', () => {
+							const val = parseInt(star.getAttribute('data-value') || '5');
+							selectedRatingInput.value = val.toString();
+							highlightStars(val);
+						});
+					});
+				}
+
+				// Helper to format date
+				function formatDate(dateString: string) {
+					const date = new Date(dateString);
+					const lang = document.documentElement.lang || 'id';
+					if (lang === 'id') {
+						return date.toLocaleDateString('id-ID', {
+							year: 'numeric',
+							month: 'long',
+							day: 'numeric'
+						});
+					} else {
+						return date.toLocaleDateString('en-US', {
+							year: 'numeric',
+							month: 'long',
+							day: 'numeric'
+						});
+					}
+				}
+
+				// Fetch and render reviews
+				async function fetchReviews() {
+					try {
+						// Fetch reviews from Supabase
+						const { data, error } = await supabase
+							.from('reviews')
+							.select('*')
+							.eq('tool_slug', toolSlug)
+							.eq('is_approved', true)
+							.order('created_at', { ascending: false });
+
+						if (error) throw error;
+
+						renderReviews(data || []);
+						updateSidebarRating(data || []);
+					} catch (err: any) {
+						console.error('Failed to fetch reviews:', err);
+						reviewsList.innerHTML = `
+							<div class="review-status error" style="display: block;">
+								<span class="lang-id">Gagal memuat ulasan: ${err.message}</span>
+								<span class="lang-en">Failed to load reviews: ${err.message}</span>
+							</div>
+						`;
+					}
+				}
+
+				// Render review cards into DOM
+				function renderReviews(reviews: any[]) {
+					if (reviews.length === 0) {
+						reviewsList.innerHTML = `
+							<div class="empty-reviews">
+								<span class="lang-id">Belum ada ulasan untuk alat ini. Jadilah yang pertama memberikan ulasan!</span>
+								<span class="lang-en">No reviews for this tool yet. Be the first to write a review!</span>
+							</div>
+						`;
+						return;
+					}
+
+					reviewsList.innerHTML = '';
+					reviews.forEach(review => {
+						const card = document.createElement('div');
+						card.className = 'review-card';
+
+						const starsHtml = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+
+						card.innerHTML = `
+							<div class="review-header">
+								<span class="review-user">${escapeHTML(review.name)}</span>
+								<span class="review-date">${formatDate(review.created_at)}</span>
+							</div>
+							<div class="review-stars">${starsHtml}</div>
+							<p class="review-comment">${escapeHTML(review.comment)}</p>
+						`;
+						reviewsList.appendChild(card);
+					});
+				}
+
+				// Calculate and update ratings in Sidebar dynamically
+				function updateSidebarRating(reviews: any[]) {
+					if (!sidebarRatingNum || !sidebarRatingCount || !sidebarRatingStars) return;
+
+					const totalReviews = reviews.length;
+					if (totalReviews === 0) {
+						sidebarRatingNum.textContent = '0.0';
+						sidebarRatingCount.innerHTML = `
+							<span class="lang-id">dari 0 ulasan</span>
+							<span class="lang-en">from 0 reviews</span>
+						`;
+						sidebarRatingStars.innerHTML = '☆☆☆☆☆'.split('').map(star => `<span style="color:#D1D5DB">★</span>`).join('');
+						
+						// Reset bars
+						if (sidebarRatingBars) {
+							sidebarRatingBars.forEach(row => {
+								const fill = row.querySelector('.rating-bar-fill') as HTMLElement;
+								const pctText = row.querySelector('.rating-bar-count');
+								if (fill) fill.style.width = '0%';
+								if (pctText) pctText.textContent = '0%';
+							});
+						}
+						return;
+					}
+
+					// Calculate average rating
+					const sum = reviews.reduce((acc, curr) => acc + curr.rating, 0);
+					const avg = (sum / totalReviews).toFixed(1);
+
+					// Render dynamic average rating number
+					sidebarRatingNum.textContent = avg;
+
+					// Render dynamic review count text
+					sidebarRatingCount.innerHTML = `
+						<span class="lang-id">dari ${totalReviews} ulasan</span>
+						<span class="lang-en">from ${totalReviews} reviews</span>
+					`;
+
+					// Render dynamic average stars
+					const roundedAvg = Math.round(parseFloat(avg));
+					let starsHtml = '';
+					for (let i = 0; i < 5; i++) {
+						if (i < roundedAvg) {
+							starsHtml += '<span>★</span>';
+						} else {
+							starsHtml += '<span style="color:#D1D5DB">★</span>';
+						}
+					}
+					sidebarRatingStars.innerHTML = starsHtml;
+
+					// Calculate rating distribution for bars
+					const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+					reviews.forEach(review => {
+						const r = review.rating as 1|2|3|4|5;
+						if (distribution[r] !== undefined) {
+							distribution[r]++;
+						}
+					});
+
+					// Update each distribution bar
+					if (sidebarRatingBars) {
+						sidebarRatingBars.forEach(row => {
+							const labelText = row.querySelector('.rating-bar-label')?.textContent;
+							if (!labelText) return;
+
+							const score = parseInt(labelText) as 1|2|3|4|5;
+							const count = distribution[score] || 0;
+							const pct = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0;
+
+							const fill = row.querySelector('.rating-bar-fill') as HTMLElement;
+							const pctText = row.querySelector('.rating-bar-count');
+							
+							if (fill) fill.style.width = `${pct}%`;
+							if (pctText) pctText.textContent = `${pct}%`;
+						});
+					}
+				}
+
+				// Escape HTML helpers to prevent XSS
+				function escapeHTML(str: string) {
+					return str.replace(/[&<>'"]/g, 
+						tag => ({
+							'&': '&amp;',
+							'<': '&lt;',
+							'>': '&gt;',
+							"'": '&#39;',
+							'"': '&quot;'
+						}[tag] || tag)
+					);
+				}
+
+				// Handle form submission
+				if (reviewForm) {
+					reviewForm.addEventListener('submit', async (e) => {
+						e.preventDefault();
+
+						// Clear previous status
+						formStatus.style.display = 'none';
+						formStatus.className = 'review-status';
+
+						const nameInput = document.getElementById('review-name') as HTMLInputElement;
+						const commentInput = document.getElementById('review-comment') as HTMLTextAreaElement;
+						const ratingVal = parseInt(selectedRatingInput.value);
+
+						const name = nameInput.value.trim();
+						const comment = commentInput.value.trim();
+
+						// Validate client side
+						if (!name || !comment || isNaN(ratingVal) || ratingVal < 1 || ratingVal > 5) {
+							showStatus(
+								document.documentElement.lang === 'en' 
+									? 'Please fill in all fields correctly.' 
+									: 'Harap isi semua bidang dengan benar.',
+								'error'
+							);
+							return;
+						}
+
+						// Show loading status
+						showStatus(
+							document.documentElement.lang === 'en'
+								? 'Submitting your review...'
+								: 'Mengirimkan ulasan Anda...',
+							'loading'
+						);
+
+						// Disable form elements during submit
+						toggleFormDisabled(true);
+
+						try {
+							const { error } = await supabase
+								.from('reviews')
+								.insert([
+									{
+										tool_slug: toolSlug,
+										name: name,
+										rating: ratingVal,
+										comment: comment,
+										is_approved: true
+									}
+								]);
+
+							if (error) throw error;
+
+							// Success
+							showStatus(
+								document.documentElement.lang === 'en'
+									? 'Thank you! Your review has been submitted successfully.'
+									: 'Terima kasih! Ulasan Anda berhasil dikirim.',
+								'success'
+							);
+
+							// Reset form fields
+							reviewForm.reset();
+							// Reset rating stars to 5
+							selectedRatingInput.value = '5';
+							if (starRatingInput) {
+								const stars = starRatingInput.querySelectorAll('.star-input-btn');
+								stars.forEach(star => star.classList.add('active'));
+							}
+
+							// Refresh reviews list
+							await fetchReviews();
+
+						} catch (err: any) {
+							console.error('Failed to submit review:', err);
+							showStatus(
+								document.documentElement.lang === 'en'
+									? `Failed to submit review: ${err.message}`
+									: `Gagal mengirimkan ulasan: ${err.message}`,
+								'error'
+							);
+						} finally {
+							toggleFormDisabled(false);
+						}
+					});
+				}
+
+				function showStatus(message: string, type: 'success' | 'error' | 'loading') {
+					if (!formStatus) return;
+					formStatus.innerHTML = message;
+					formStatus.className = `review-status ${type}`;
+					formStatus.style.display = 'block';
+				}
+
+				function toggleFormDisabled(disabled: boolean) {
+					const inputs = reviewForm.querySelectorAll('input, textarea, button');
+					inputs.forEach(el => {
+						if (disabled) {
+							el.setAttribute('disabled', 'disabled');
+						} else {
+							el.removeAttribute('disabled');
+						}
+					});
+				}
+
+				// Initial Fetch on load
+				fetchReviews();
+			});
+		</script>
 	</body>
 </html>
+

@@ -73,6 +73,14 @@ p {
 	margin-bottom: 2em;
 }
 
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+	margin-top: 1.8rem;
+	margin-bottom: 0.8rem;
+}
+
 img {
 	max-width: 100%;
 	height: auto;
@@ -124,6 +132,7 @@ hr {
 }
 
 .header-pill {
+	position: relative;
 	background: rgba(250, 242, 234, 0.85);
 	backdrop-filter: blur(12px);
 	-webkit-backdrop-filter: blur(12px);
@@ -134,6 +143,21 @@ hr {
 	justify-content: space-between;
 	align-items: center;
 	box-shadow: 0 4px 20px rgba(10, 37, 64, 0.08);
+}
+
+.mobile-toggle {
+	display: none;
+	background: none;
+	border: none;
+	padding: 6px;
+	cursor: pointer;
+	color: var(--color-accent);
+	align-items: center;
+	justify-content: center;
+}
+
+.mobile-toggle svg {
+	display: block;
 }
 
 .header-logo {
@@ -183,7 +207,7 @@ hr {
 /* Neo-Brutalist Grid */
 .tools-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(min(290px, 100%), 1fr));
 	gap: 32px;
 	margin-top: 48px;
 }
@@ -414,9 +438,64 @@ hr {
 	h1 { font-size: 2.8em; }
 	h2 { font-size: 2.2em; }
 	h3 { font-size: 1.8em; }
+	
+	.desktop-only {
+		display: none !important;
+	}
+
+	.mobile-only {
+		display: block !important;
+	}
+
+	.header-pill {
+		padding: 8px 16px;
+		border-radius: 30px;
+	}
+
+	.header-logo {
+		font-size: 1.25rem;
+		gap: 6px;
+		white-space: nowrap;
+	}
+
+	.header-logo svg {
+		width: 24px;
+		height: 24px;
+	}
+
+	.mobile-toggle {
+		display: flex;
+	}
+
 	.header-nav {
 		display: none;
+		flex-direction: column;
+		position: absolute;
+		top: calc(100% + 12px);
+		left: 0;
+		right: 0;
+		background: #FAF2EA;
+		border: 2px solid var(--color-accent);
+		border-radius: 24px;
+		padding: 20px;
+		gap: 16px;
+		box-shadow: 4px 4px 0px var(--color-accent);
 	}
+
+	.header-nav.active {
+		display: flex;
+	}
+
+	.header-link {
+		padding: 8px 12px;
+		width: 100%;
+		display: block;
+	}
+
+	main {
+		padding: 8em 1em 2em 1em;
+	}
+
 	.detail-main {
 		padding: 24px;
 	}
@@ -434,6 +513,14 @@ hr {
 	clip: rect(1px, 1px, 1px, 1px);
 	clip-path: inset(50%);
 	white-space: nowrap;
+}
+
+.mobile-only {
+	display: none !important;
+}
+
+.desktop-only {
+	/* visible on desktop */
 }
 
 /* Language switcher and actions styling */
