@@ -44,6 +44,8 @@ features:
     descEn: Generate high-quality video clips from text or images with precise duration and camera motion control.
 
 pricing:
+  discount: Hemat 50%
+  discountEn: Save 50%
   monthly:
     - name: Essential
       tagline: Untuk pemula & pehobi

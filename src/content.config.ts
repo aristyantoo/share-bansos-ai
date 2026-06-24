@@ -11,6 +11,7 @@ const tools = defineCollection({
 		descriptionEn: z.string(),
 		category: z.string(),
 		url: z.string(),
+		affiliateUrl: z.string().optional(),
 		logoUrl: z.string().optional(),
 		price: z.string(),
 		creator: z.string(),
@@ -27,6 +28,8 @@ const tools = defineCollection({
 			descEn: z.string(),
 		})).optional(),
 		pricing: z.object({
+			discount: z.string().optional(),
+			discountEn: z.string().optional(),
 			monthly: z.array(z.object({
 				name: z.string(),
 				tagline: z.string(),
@@ -78,6 +81,31 @@ const tools = defineCollection({
 			baseEditor: z.string(),
 			freeTier: z.boolean(),
 			startingPrice: z.string(),
+		})).optional(),
+		limitations: z.object({
+			title: z.string(),
+			titleEn: z.string(),
+			description: z.string().optional(),
+			descriptionEn: z.string().optional(),
+			headers: z.array(z.string()),
+			headersEn: z.array(z.string()),
+			rows: z.array(z.object({
+				label: z.string(),
+				labelEn: z.string(),
+				values: z.array(z.string()),
+				valuesEn: z.array(z.string()),
+			})),
+		}).optional(),
+		coupons: z.array(z.object({
+			code: z.string(),
+			discount: z.string(),
+			discountEn: z.string(),
+			desc: z.string(),
+			descEn: z.string(),
+			expiry: z.string().optional(),
+			expiryEn: z.string().optional(),
+			terms: z.array(z.string()).optional(),
+			termsEn: z.array(z.string()).optional(),
 		})).optional(),
 	}),
 });

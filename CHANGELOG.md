@@ -11,9 +11,30 @@ dan proyek ini menggunakan [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Planned
 - Tambah lebih banyak AI tools (Perplexity, Notion AI, GitHub Copilot, Runway, dll.)
-- Filter & pencarian tools berdasarkan kategori dan harga
 - Halaman perbandingan tools side-by-side
 - Dark mode toggle
+
+---
+
+## [1.2.0] — 2026-06-24
+
+### Added
+- 🎛️ **Filter, Sortir & Paginasi di Halaman Utama**:
+  - Menambahkan bar penyaringan interaktif ("Semua", "Sedang Tren", "Populer", "Terbaru").
+  - Menambahkan bar pengurutan dinamis ("Bawaan", "Nama A-Z", "Nama Z-A", "Rating Tertinggi").
+  - Mengimplementasikan paginasi dinamis berbasis klien (dibatasi 12 tools per halaman) dengan tombol navigasi Sebelumnya/Berikutnya.
+  - Dukungan pelokalan bahasa (bilingual ID/EN) penuh untuk bar kontrol tersebut.
+- 🎟️ **Fitur Kupon Promo di Halaman Detail**:
+  - Penambahan visual kupon diskon/promo di sidebar kanan halaman detail tool.
+  - Tombol interaktif untuk menyalin kode kupon dengan efek feedback visual dan notifikasi toast.
+  - Integrasi tooltip detail syarat & ketentuan serta tanggal kedaluwarsa kupon.
+  - Desain *empty state* yang interaktif saat tool tidak memiliki kupon promo aktif.
+- 🛠️ **4 AI Tools baru**:
+  - [Freebuff](file:///src/content/tools/freebuff.md) — Platform coding AI otonom (CLI/Web/Chat) 100% gratis didukung iklan teks.
+  - [Krea AI](file:///src/content/tools/krea.md) — Suite kreatif AI untuk kanvas sketsa real-time dan pembuatan video.
+  - [Higgsfield AI](file:///src/content/tools/higgsfield.md) — Generator video tingkat sutradara dengan penguncian karakter dan kontrol gerakan kamera.
+  - [Ideogram](file:///src/content/tools/ideogram.md) — Generator gambar AI dengan rendering teks dan tipografi terbaik di kelasnya.
+- 🎨 **Logo SVG Kustom**: Vektor logo SVG baru untuk Krea AI, Higgsfield AI, dan Ideogram.
 
 ---
 
@@ -79,7 +100,8 @@ dan proyek ini menggunakan [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ---
 
-[Unreleased]: https://github.com/aristyantoo/share-bansos-ai/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/aristyantoo/share-bansos-ai/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/aristyantoo/share-bansos-ai/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/aristyantoo/share-bansos-ai/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/aristyantoo/share-bansos-ai/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/aristyantoo/share-bansos-ai/releases/tag/v0.1.0

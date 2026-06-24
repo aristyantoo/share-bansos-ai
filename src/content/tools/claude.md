@@ -44,6 +44,8 @@ features:
     descEn: Process entire project directories or long-form documents in a single contextual prompt.
 
 pricing:
+  discount: Hemat s.d. 17%
+  discountEn: Save up to 17%
   monthly:
     - name: Free
       tagline: Akses standar Claude

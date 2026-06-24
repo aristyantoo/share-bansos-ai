@@ -22,7 +22,7 @@
 
 - 🚀 **100/100 Lighthouse** — Performa, aksesibilitas, dan SEO optimal
 - 🌏 **Bilingual (ID/EN)** — Konten tersedia dalam Bahasa Indonesia dan English dengan toggle switcher
-- 🗂️ **Direktori AI Tools** — ChatGPT, Claude, Gemini, Cursor, Kiro, Leonardo AI, Midjourney, OpenArt, v0, dan terus bertambah
+- 🗂️ **Direktori AI Tools** — ChatGPT, Claude, Gemini, Cursor, Kiro, Leonardo AI, Midjourney, OpenArt, Freebuff, Krea AI, Higgsfield AI, Ideogram, v0, dan terus bertambah
 - ⭐ **Reviews & Ratings** — Fitur ulasan dan rating interaktif terintegrasi dengan backend Supabase
 - 📡 **RSS Feed** — Subscribe ke pembaruan tools terbaru
 - 🗺️ **Sitemap otomatis** — SEO-friendly dengan sitemap XML

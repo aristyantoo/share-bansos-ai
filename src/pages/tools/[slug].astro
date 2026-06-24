@@ -20,7 +20,12 @@ type Props = {
 const { tool } = Astro.props;
 const { Content } = await render(tool);
 
+const targetUrl = tool.data.affiliateUrl || tool.data.url;
+const hasAffiliate = !!tool.data.affiliateUrl;
+
 // Get related tools (same category, excluding current tool)
+const isFreeOnly = tool.data.pricing && !tool.data.price.includes('/') && (tool.data.price.toLowerCase().includes('gratis') || tool.data.price.toLowerCase().includes('free'));
+
 const allTools = await getCollection('tools');
 const relatedTools = allTools
 	.filter((t) => t.id !== tool.id && t.data.category === tool.data.category)
@@ -222,6 +227,79 @@ function formatPricePart(part: string) {
 				box-shadow: 4px 4px 0px var(--color-accent);
 				background: #FAF2EA;
 			}
+			.btn-bookmark svg {
+				transition: fill 0.2s ease, stroke 0.2s ease, transform 0.2s ease;
+			}
+			.btn-bookmark:hover svg {
+				fill: #FFC700;
+				transform: scale(1.1);
+			}
+			.btn-bookmark.active svg {
+				fill: #FFC700;
+				stroke: var(--color-accent);
+			}
+
+			/* Tooltip */
+			.tooltip-wrapper {
+				position: relative;
+				display: inline-flex;
+			}
+			.tooltip-content {
+				position: absolute;
+				top: calc(100% + 10px);
+				right: 0;
+				transform: translateY(4px);
+				background: #ffffff;
+				border: 2px solid var(--color-accent);
+				padding: 6px 10px;
+				border-radius: 8px;
+				box-shadow: 2px 2px 0px var(--color-accent);
+				color: var(--color-accent);
+				font-size: 0.75rem;
+				font-weight: 800;
+				white-space: nowrap;
+				pointer-events: none;
+				opacity: 0;
+				visibility: hidden;
+				transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+				z-index: 50;
+			}
+			.tooltip-content::after {
+				content: '';
+				position: absolute;
+				bottom: 100%;
+				right: 16px;
+				border-width: 6px;
+				border-style: solid;
+				border-color: transparent transparent var(--color-accent) transparent;
+			}
+			.tooltip-content::before {
+				content: '';
+				position: absolute;
+				bottom: calc(100% - 2px);
+				right: 17px;
+				border-width: 5px;
+				border-style: solid;
+				border-color: transparent transparent #ffffff transparent;
+				z-index: 1;
+			}
+			.tooltip-wrapper:hover .tooltip-content {
+				opacity: 1;
+				visibility: visible;
+				transform: translateY(0);
+			}
+			.btn-bookmark + .tooltip-content .tooltip-remove {
+				display: none;
+			}
+			.btn-bookmark + .tooltip-content .tooltip-save {
+				display: inline;
+			}
+			.btn-bookmark.active + .tooltip-content .tooltip-save {
+				display: none;
+			}
+			.btn-bookmark.active + .tooltip-content .tooltip-remove {
+				display: inline;
+			}
 			.tool-desc {
 				font-size: 1.05rem;
 				line-height: 1.6;
@@ -337,6 +415,95 @@ function formatPricePart(part: string) {
 				margin: 0;
 			}
 
+			/* Free Only Pricing Custom Styling */
+			.free-pricing-card {
+				background: #FFFDF5;
+				border: 2px solid var(--color-accent);
+				border-radius: 24px;
+				padding: 32px;
+				position: relative;
+				box-shadow: 6px 6px 0px var(--color-accent);
+				margin-top: 16px;
+				display: flex;
+				flex-direction: column;
+				gap: 20px;
+				overflow: hidden;
+			}
+			.free-badge {
+				position: absolute;
+				top: 16px;
+				right: 16px;
+				background: #10B981;
+				color: #ffffff;
+				font-size: 0.75rem;
+				font-weight: 900;
+				padding: 6px 16px;
+				border-radius: 50px;
+				border: 2px solid var(--color-accent);
+				box-shadow: 2px 2px 0px var(--color-accent);
+				letter-spacing: 0.05em;
+			}
+			.free-card-header {
+				margin-top: 12px;
+			}
+			.free-price-box {
+				display: flex;
+				align-items: center;
+				gap: 16px;
+				background: #ffffff;
+				border: 2px solid var(--color-accent);
+				padding: 16px 24px;
+				border-radius: 16px;
+				box-shadow: 3px 3px 0px var(--color-accent);
+				width: fit-content;
+				margin: 0 auto 20px auto;
+			}
+			.free-price-meta {
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+			}
+			.free-features-section {
+				margin-bottom: 24px;
+			}
+			.features-title {
+				font-size: 0.95rem;
+				font-weight: 800;
+				margin-bottom: 12px;
+				color: var(--color-accent);
+			}
+			.free-features-grid {
+				display: grid;
+				grid-template-columns: repeat(2, 1fr);
+				gap: 12px;
+			}
+			.free-cta-btn {
+				max-width: 320px;
+				margin: 0 auto;
+			}
+			
+			@media (max-width: 768px) {
+				.free-pricing-card {
+					padding: 24px;
+				}
+				.free-badge {
+					position: relative;
+					top: 0;
+					right: 0;
+					width: fit-content;
+					margin-bottom: 16px;
+				}
+				.free-features-grid {
+					grid-template-columns: 1fr;
+				}
+				.free-price-box {
+					width: 100%;
+				}
+				.free-cta-btn {
+					max-width: 100%;
+				}
+			}
+
 			/* PRICING */
 			.pricing-switcher-wrapper {
 				display: flex;
@@ -381,6 +548,28 @@ function formatPricePart(part: string) {
 			.pricing-note {
 				font-size: 0.8rem;
 				opacity: 0.7;
+			}
+			.affiliate-disclaimer {
+				margin-top: 16px;
+				padding: 12px 16px;
+				background: #fffbeb;
+				border: 2px solid var(--color-accent);
+				border-radius: 12px;
+				box-shadow: 4px 4px 0px var(--color-accent);
+				font-size: 0.8rem;
+				color: var(--color-accent);
+				font-weight: 500;
+				display: flex;
+				gap: 10px;
+				align-items: flex-start;
+				line-height: 1.5;
+			}
+			.affiliate-disclaimer-icon {
+				font-size: 1.1rem;
+				flex-shrink: 0;
+			}
+			.affiliate-disclaimer-text {
+				margin: 0;
 			}
 			
 			/* Pricing Standard Grid */
@@ -463,6 +652,10 @@ function formatPricePart(part: string) {
 				min-height: 18px;
 			}
 			.plan-cta {
+				display: block;
+				text-decoration: none;
+				color: inherit;
+				box-sizing: border-box;
 				width: 100%;
 				padding: 10px 16px;
 				border-radius: 12px;
@@ -711,6 +904,274 @@ function formatPricePart(part: string) {
 				opacity: 0.65;
 				margin-bottom: 16px;
 			}
+
+			/* ─── PROMO COUPONS ──────────────────────────── */
+			.coupon-item {
+				background: #fafafa;
+				border: 2px dashed var(--color-accent);
+				border-radius: 12px;
+				padding: 16px;
+				margin-top: 12px;
+				position: relative;
+				transition: all 0.2s ease;
+			}
+			.coupon-item:hover {
+				background: #fdfdfd;
+				transform: translateY(-2px);
+				box-shadow: 4px 4px 0px var(--color-accent);
+			}
+			.coupon-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 8px;
+			}
+			.coupon-discount {
+				font-size: 0.85rem;
+				font-weight: 800;
+				color: #F38C3B;
+				background: rgba(243, 140, 59, 0.1);
+				padding: 4px 10px;
+				border-radius: 20px;
+				border: 2px solid var(--color-accent);
+			}
+			.coupon-desc {
+				font-size: 0.85rem;
+				line-height: 1.4;
+				color: var(--color-accent);
+				opacity: 0.85;
+				margin: 0 0 12px 0;
+				font-weight: 500;
+			}
+			.coupon-code-container {
+				display: flex;
+				border: 2px solid var(--color-accent);
+				border-radius: 8px;
+				overflow: hidden;
+				background: #ffffff;
+				box-shadow: 2px 2px 0px var(--color-accent);
+				transition: transform 0.1s, box-shadow 0.1s;
+			}
+			.coupon-code-container:hover {
+				transform: translate(-1px, -1px);
+				box-shadow: 3px 3px 0px var(--color-accent);
+			}
+			.coupon-code-container:active {
+				transform: translate(1px, 1px);
+				box-shadow: 1px 1px 0px var(--color-accent);
+			}
+			.coupon-code {
+				flex: 1;
+				padding: 8px 12px;
+				font-family: var(--font-mono, monospace);
+				font-size: 0.9rem;
+				font-weight: 800;
+				color: var(--color-accent);
+				background: #f3f4f6;
+				display: flex;
+				align-items: center;
+				letter-spacing: 0.05em;
+			}
+			.coupon-copy-btn {
+				background: #ffffff;
+				border: none;
+				border-left: 2px solid var(--color-accent);
+				padding: 8px 14px;
+				cursor: pointer;
+				font-family: var(--font-body);
+				font-size: 0.8rem;
+				font-weight: 700;
+				color: var(--color-accent);
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				transition: all 0.1s ease;
+				position: relative;
+			}
+			.coupon-copy-btn:hover {
+				background: #F38C3B;
+				color: #ffffff;
+			}
+			.coupon-copy-btn:active {
+				background: #e07b2c;
+			}
+
+			/* Tooltip Trigger & Info Button */
+			.coupon-info-trigger-wrapper {
+				position: relative;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			.coupon-info-trigger {
+				background: #f3f4f6;
+				border: 2px solid var(--color-accent);
+				border-radius: 50%;
+				color: var(--color-accent);
+				cursor: pointer;
+				width: 22px;
+				height: 22px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 0;
+				transition: all 0.15s ease;
+			}
+			.coupon-info-trigger:hover {
+				background: var(--color-accent);
+				color: #ffffff;
+			}
+			.coupon-info-trigger .info-icon {
+				display: block;
+				transition: transform 0.15s ease;
+			}
+			.coupon-info-trigger:hover .info-icon {
+				transform: scale(1.1);
+			}
+
+			/* CSS Tooltip */
+			.coupon-tooltip {
+				position: absolute;
+				bottom: calc(100% + 8px);
+				right: 0;
+				width: 240px;
+				background: #ffffff;
+				border: 2px solid var(--color-accent);
+				border-radius: 12px;
+				padding: 12px;
+				box-shadow: 4px 4px 0px var(--color-accent);
+				z-index: 100;
+				opacity: 0;
+				visibility: hidden;
+				transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+				transform: translateY(5px);
+			}
+			.coupon-info-trigger-wrapper:hover .coupon-tooltip,
+			.coupon-info-trigger-wrapper:focus-within .coupon-tooltip {
+				opacity: 1;
+				visibility: visible;
+				transform: translateY(0);
+			}
+			/* Tooltip Arrow */
+			.coupon-tooltip::after {
+				content: '';
+				position: absolute;
+				top: 100%;
+				right: 6px;
+				border-width: 6px;
+				border-style: solid;
+				border-color: var(--color-accent) transparent transparent transparent;
+			}
+			.coupon-tooltip::before {
+				content: '';
+				position: absolute;
+				top: 100%;
+				right: 7px;
+				border-width: 5px;
+				border-style: solid;
+				border-color: #ffffff transparent transparent transparent;
+				z-index: 101;
+			}
+
+			.tooltip-header {
+				font-size: 0.75rem;
+				font-weight: 800;
+				text-transform: uppercase;
+				margin-bottom: 6px;
+				color: var(--color-accent);
+				border-bottom: 2px solid var(--color-accent);
+				padding-bottom: 4px;
+				letter-spacing: 0.05em;
+			}
+			.tooltip-expiry {
+				font-size: 0.7rem;
+				color: var(--color-accent);
+				margin-bottom: 6px;
+				opacity: 0.9;
+			}
+			.tooltip-terms {
+				margin: 0;
+				padding-left: 14px;
+				font-size: 0.7rem;
+				color: var(--color-accent);
+				opacity: 0.95;
+				line-height: 1.4;
+			}
+			.tooltip-terms li {
+				margin-bottom: 4px;
+			}
+
+			/* Copy Success Tooltip */
+			.copy-success-tooltip {
+				position: absolute;
+				bottom: calc(100% + 8px);
+				left: 50%;
+				transform: translateX(-50%) translateY(5px);
+				background: var(--color-accent);
+				color: #ffffff;
+				padding: 6px 10px;
+				border-radius: 6px;
+				font-size: 0.75rem;
+				font-weight: 800;
+				white-space: nowrap;
+				opacity: 0;
+				visibility: hidden;
+				transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+				pointer-events: none;
+				border: 2px solid var(--color-accent);
+				box-shadow: 2px 2px 0px rgba(0,0,0,0.25);
+			}
+			.copy-success-tooltip::after {
+				content: '';
+				position: absolute;
+				top: 100%;
+				left: 50%;
+				transform: translateX(-50%);
+				border-width: 4px;
+				border-style: solid;
+				border-color: var(--color-accent) transparent transparent transparent;
+			}
+			.coupon-copy-btn.copied .copy-success-tooltip {
+				opacity: 1;
+				visibility: visible;
+				transform: translateX(-50%) translateY(0);
+			}
+
+			/* Empty State Styling */
+			.coupon-empty-state {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				text-align: center;
+				padding: 16px 8px 8px 8px;
+			}
+			.coupon-empty-state .empty-icon {
+				color: var(--color-accent);
+				opacity: 0.35;
+				margin-bottom: 12px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+			}
+			.coupon-empty-state:hover .empty-icon {
+				transform: scale(1.1) rotate(-8deg);
+				opacity: 0.6;
+			}
+			.coupon-empty-state .empty-title {
+				font-size: 0.95rem;
+				font-weight: 800;
+				color: var(--color-accent);
+				margin: 0 0 6px 0;
+			}
+			.coupon-empty-state .empty-desc {
+				font-size: 0.78rem;
+				line-height: 1.4;
+				color: var(--color-accent);
+				opacity: 0.65;
+				margin: 0;
+			}
+
 			
 			/* META LIST */
 			.meta-list {
@@ -1150,9 +1611,21 @@ function formatPricePart(part: string) {
 								</div>
 							</div>
 							<div class="hero-actions">
-								<button class="btn-bookmark" aria-label="Save tool" onclick="alert('Tool saved to bookmarks!')">
-									<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
-								</button>
+								<div class="tooltip-wrapper">
+									<button class="btn-bookmark" aria-label="Save tool">
+										<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+									</button>
+									<div class="tooltip-content">
+										<span class="tooltip-save">
+											<span class="lang-id">Simpan ke Bookmark</span>
+											<span class="lang-en">Save to Bookmarks</span>
+										</span>
+										<span class="tooltip-remove">
+											<span class="lang-id">Hapus dari Bookmark</span>
+											<span class="lang-en">Remove from Bookmarks</span>
+										</span>
+									</div>
+								</div>
 							</div>
 						</div>
 						<div class="hero-divider"></div>
@@ -1244,9 +1717,154 @@ function formatPricePart(part: string) {
 						</div>
 					)}
 
+					<!-- REGIONAL LIMITATIONS -->
+					{tool.data.limitations && (() => {
+						const isAccentDark = tool.data.accentColor && (
+							tool.data.accentColor === '#000' || 
+							tool.data.accentColor === '#000000' || 
+							tool.data.accentColor === '#111' || 
+							tool.data.accentColor === '#111111' || 
+							tool.data.accentColor === '#1a1a1a'
+						);
+						const tableBg = tool.data.accentColor || 'var(--color-accent)';
+						const tableFg = isAccentDark || !tool.data.accentColor ? '#fff' : '#000';
+						
+						return (
+							<div class="neo-section">
+								<div class="section-title">
+									<div class="section-title-dot" style="background-color: #EF4444;"></div>
+									<span class="lang-id">{tool.data.limitations.title}</span>
+									<span class="lang-en">{tool.data.limitations.titleEn}</span>
+								</div>
+								{tool.data.limitations.description && (
+									<p class="section-subtitle lang-id" style="margin-bottom: 16px; font-size: 0.95rem; opacity: 0.8;">
+										{tool.data.limitations.description}
+									</p>
+								)}
+								{tool.data.limitations.descriptionEn && (
+									<p class="section-subtitle lang-en" style="margin-bottom: 16px; font-size: 0.95rem; opacity: 0.8;">
+										{tool.data.limitations.descriptionEn}
+									</p>
+								)}
+								<div class="limitations-table-wrapper" style="overflow-x: auto; border: 3px solid #000; box-shadow: 6px 6px 0px #000; border-radius: 12px; background: #fff; margin-top: 16px;">
+									<table style="width: 100%; border-collapse: collapse; font-size: 0.95rem; text-align: left; table-layout: fixed; min-width: 600px;">
+										<thead>
+											<tr style="border-bottom: 3px solid #000;">
+												<th style={`padding: 14px 16px; font-weight: 800; background: ${tableBg}; color: ${tableFg}; border-right: 3px solid #000; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; width: 30%; text-align: center;`}>
+													<span class="lang-id">Fitur</span>
+													<span class="lang-en">Feature</span>
+												</th>
+												<th style={`padding: 14px 16px; font-weight: 800; background: ${tableBg}; color: ${tableFg}; border-right: 3px solid #000; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; width: 35%; text-align: center;`}>
+													<span class="lang-id">{tool.data.limitations.headers[1]}</span>
+													<span class="lang-en">{tool.data.limitations.headersEn[1]}</span>
+												</th>
+												<th style={`padding: 14px 16px; font-weight: 800; background: ${tableBg}; color: ${tableFg}; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; width: 35%; text-align: center;`}>
+													<span class="lang-id">{tool.data.limitations.headers[2]}</span>
+													<span class="lang-en">{tool.data.limitations.headersEn[2]}</span>
+												</th>
+											</tr>
+										</thead>
+										<tbody>
+											{tool.data.limitations.rows.map((row, rowIdx) => (
+												<tr style={`border-bottom: ${rowIdx === tool.data.limitations.rows.length - 1 ? 'none' : '3px solid #000'}; background: ${rowIdx % 2 === 0 ? '#FAF2EA40' : '#fff'};`}>
+													<td style="padding: 14px 16px; font-weight: 700; border-right: 3px solid #000; background: #FAF2EA60; width: 30%; word-break: break-word; white-space: normal;">
+														<span class="lang-id">{row.label}</span>
+														<span class="lang-en">{row.labelEn}</span>
+													</td>
+													<td style="padding: 14px 16px; border-right: 3px solid #000; width: 35%; word-break: break-word; white-space: normal; text-align: center; font-weight: 500;">
+														<span class="lang-id">{row.values[0]}</span>
+														<span class="lang-en">{row.valuesEn[0]}</span>
+													</td>
+													<td style="padding: 14px 16px; width: 35%; word-break: break-word; white-space: normal; text-align: center; font-weight: 500;">
+														<span class="lang-id">{row.values[1]}</span>
+														<span class="lang-en">{row.valuesEn[1]}</span>
+													</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								</div>
+							</div>
+						);
+					})()}
+
 					<!-- PRICING TABLE / SLIDER -->
 					{tool.data.pricing && (
-						<div class="neo-section" data-plans-monthly={JSON.stringify(tool.data.pricing.monthly)} data-plans-annual={JSON.stringify(tool.data.pricing.annual)}>
+						isFreeOnly ? (
+							<div class="neo-section">
+								<div class="section-title">
+									<div class="section-title-dot"></div>
+									<span class="lang-id">Informasi Harga</span>
+									<span class="lang-en">Pricing Information</span>
+								</div>
+
+								<div class="free-pricing-card">
+									<div class="free-badge">
+										<span class="lang-id">100% GRATIS</span>
+										<span class="lang-en">100% FREE</span>
+									</div>
+									<div class="free-card-header">
+										<div class="plan-name">
+											<span class="lang-id">Akses Gratis Selamanya</span>
+											<span class="lang-en">Free Forever Access</span>
+										</div>
+										<div class="plan-tagline lang-id" style="min-height: auto; margin-bottom: 8px;">{tool.data.pricing.monthly[0].tagline}</div>
+										<div class="plan-tagline lang-en" style="min-height: auto; margin-bottom: 8px;">{tool.data.pricing.monthly[0].taglineEn}</div>
+									</div>
+									
+									<div class="free-card-body">
+										<div class="free-price-box">
+											<span class="price-amount" style="color: #10B981">$0</span>
+											<div class="free-price-meta">
+												<span class="price-period lang-id">/selamanya</span>
+												<span class="price-period lang-en">/forever</span>
+												<span class="free-annual-note lang-id" style="margin-bottom: 0; min-height: auto;">{tool.data.pricing.monthly[0].annualNote}</span>
+												<span class="free-annual-note lang-en" style="margin-bottom: 0; min-height: auto;">{tool.data.pricing.monthly[0].annualNoteEn}</span>
+											</div>
+										</div>
+										
+										<div class="plan-divider"></div>
+										
+										<div class="free-features-section">
+											<div class="features-title lang-id">Fitur yang Termasuk:</div>
+											<div class="features-title lang-en">Included Features:</div>
+											<div class="free-features-grid">
+												{tool.data.pricing.monthly[0].features.map((f, idx) => (
+													<div class="plan-feature">
+														<span class="check">✓</span>
+														<span class="lang-id">{f}</span>
+														<span class="lang-en">{tool.data.pricing.monthly[0].featuresEn[idx]}</span>
+													</div>
+												))}
+											</div>
+										</div>
+
+										<div class="free-card-action">
+											<a href={targetUrl} target="_blank" rel="noopener noreferrer" class="plan-cta cta-accent free-cta-btn" style="display: block; text-decoration: none;">
+												<span class="lang-id">{tool.data.pricing.monthly[0].ctaText}</span>
+												<span class="lang-en">{tool.data.pricing.monthly[0].ctaTextEn}</span>
+											</a>
+										</div>
+									</div>
+								</div>
+
+								<p class="pricing-note">
+									⚠️ <span class="lang-id">Info harga bersumber dari data publik. Harap verifikasi langsung di situs resmi {tool.data.name}.</span>
+									<span class="lang-en">Pricing info is sourced from public data. Please verify directly on the official {tool.data.name} website.</span>
+								</p>
+
+								{hasAffiliate && (
+									<div class="affiliate-disclaimer">
+										<span class="affiliate-disclaimer-icon">ℹ️</span>
+										<p class="affiliate-disclaimer-text">
+											<span class="lang-id">Beberapa tautan di atas mungkin merupakan tautan afiliasi. Jika Anda membeli paket berbayar, kami mungkin menerima komisi tanpa biaya tambahan bagi Anda.</span>
+											<span class="lang-en">Some links above may be affiliate links. If you purchase a paid plan, we may receive a commission at no additional cost to you.</span>
+										</p>
+									</div>
+								)}
+							</div>
+						) : (
+							<div class="neo-section" data-plans-monthly={JSON.stringify(tool.data.pricing.monthly)} data-plans-annual={JSON.stringify(tool.data.pricing.annual)}>
 							<div class="pricing-switcher-wrapper">
 								<div class="section-title" style="margin-bottom:0">
 									<div class="section-title-dot"></div>
@@ -1262,7 +1880,10 @@ function formatPricePart(part: string) {
 									<div class="pricing-tab" data-pricing-type="annual">
 										<span class="lang-id">Tahunan</span>
 										<span class="lang-en">Annual</span>
-										<span class="annual-save-badge"><span class="lang-id">Hemat 20%</span><span class="lang-en">Save 20%</span></span>
+										<span class="annual-save-badge">
+											<span class="lang-id">{tool.data.pricing.discount || "Hemat 20%"}</span>
+											<span class="lang-en">{tool.data.pricing.discountEn || "Save 20%"}</span>
+										</span>
 									</div>
 								</div>
 							</div>
@@ -1294,10 +1915,10 @@ function formatPricePart(part: string) {
 													</div>
 													<div class="price-annual-note lang-id">{plan.annualNote}</div>
 													<div class="price-annual-note lang-en">{plan.annualNoteEn}</div>
-													<button class={`plan-cta ${plan.popular ? 'cta-accent' : 'cta-outline'}`}>
+													<a href={targetUrl} target="_blank" rel="noopener noreferrer" class={`plan-cta ${plan.popular ? 'cta-accent' : 'cta-outline'}`}>
 														<span class="lang-id">{plan.ctaText}</span>
 														<span class="lang-en">{plan.ctaTextEn}</span>
-													</button>
+													</a>
 													<div class="plan-divider"></div>
 													<div class="plan-features">
 														{plan.features.map((f, idx) => (
@@ -1337,10 +1958,10 @@ function formatPricePart(part: string) {
 													</div>
 													<div class="price-annual-note lang-id">{plan.annualNote}</div>
 													<div class="price-annual-note lang-en">{plan.annualNoteEn}</div>
-													<button class={`plan-cta ${plan.popular ? 'cta-accent' : 'cta-outline'}`}>
+													<a href={targetUrl} target="_blank" rel="noopener noreferrer" class={`plan-cta ${plan.popular ? 'cta-accent' : 'cta-outline'}`}>
 														<span class="lang-id">{plan.ctaText}</span>
 														<span class="lang-en">{plan.ctaTextEn}</span>
-													</button>
+													</a>
 													<div class="plan-divider"></div>
 													<div class="plan-features">
 														{plan.features.map((f, idx) => (
@@ -1389,10 +2010,10 @@ function formatPricePart(part: string) {
 											</div>
 											<div class="price-annual-note lang-id" id="slider-price-note-id">Ditagih bulanan, batalkan kapan saja</div>
 											<div class="price-annual-note lang-en" id="slider-price-note-en">Billed monthly, cancel anytime</div>
-											<button class="plan-cta cta-accent" id="slider-plan-cta">
+											<a href={targetUrl} target="_blank" rel="noopener noreferrer" class="plan-cta cta-accent" id="slider-plan-cta">
 												<span class="lang-id" id="slider-cta-text-id">Mulai Uji Coba Pro</span>
 												<span class="lang-en" id="slider-cta-text-en">Start Pro Trial</span>
-											</button>
+											</a>
 											<div class="plan-divider"></div>
 											<div class="plan-features" id="slider-features-list">
 												<!-- Populated dynamically via JS -->
@@ -1406,8 +2027,19 @@ function formatPricePart(part: string) {
 								⚠️ <span class="lang-id">Info harga bersumber dari data publik. Harap verifikasi langsung di situs resmi {tool.data.name}.</span>
 								<span class="lang-en">Pricing info is sourced from public data. Please verify directly on the official {tool.data.name} website.</span>
 							</p>
+
+							{hasAffiliate && (
+								<div class="affiliate-disclaimer">
+									<span class="affiliate-disclaimer-icon">ℹ️</span>
+									<p class="affiliate-disclaimer-text">
+										<span class="lang-id">Beberapa tautan di atas mungkin merupakan tautan afiliasi. Jika Anda membeli paket berbayar, kami mungkin menerima komisi tanpa biaya tambahan bagi Anda.</span>
+										<span class="lang-en">Some links above may be affiliate links. If you purchase a paid plan, we may receive a commission at no additional cost to you.</span>
+									</p>
+								</div>
+							)}
 						</div>
-					)}
+					)
+				)}
 
 					<!-- HOW TO GET STARTED (STEPS) -->
 					{tool.data.steps && (
@@ -1592,7 +2224,7 @@ function formatPricePart(part: string) {
 								<span class="meta-val">{tool.data.license || 'Proprietary'}</span>
 							</div>
 						</div>
-						<a href={tool.data.url} target="_blank" class="action-btn" style="margin-top:20px">
+						<a href={targetUrl} target="_blank" class="action-btn" style="margin-top:20px">
 							<span class="lang-id">Kunjungi {tool.data.name} ↗</span>
 							<span class="lang-en">Visit {tool.data.name} ↗</span>
 						</a>
@@ -1618,6 +2250,101 @@ function formatPricePart(part: string) {
 								<div class="platform-chip">🌐 Web</div>
 							)}
 						</div>
+					</div>
+
+					<!-- PROMO COUPONS -->
+					<div class="sidebar-card">
+						<div class="sidebar-title">
+							<span class="lang-id">Kupon Promo</span>
+							<span class="lang-en">Promo Coupons</span>
+						</div>
+						{tool.data.coupons && tool.data.coupons.length > 0 ? (
+							<div class="coupons-list">
+								{tool.data.coupons.map((coupon) => (
+									<div class="coupon-item">
+										<div class="coupon-header">
+											<span class="coupon-discount">
+												<span class="lang-id">{coupon.discount}</span>
+												<span class="lang-en">{coupon.discountEn}</span>
+											</span>
+											
+											<div class="coupon-info-trigger-wrapper">
+												<button class="coupon-info-trigger" aria-label="Coupon details">
+													<svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+														<line x1="12" y1="16" x2="12" y2="12"></line>
+														<line x1="12" y1="8" x2="12" y2="8"></line>
+													</svg>
+												</button>
+												<div class="coupon-tooltip">
+													<div class="tooltip-header">
+														<span class="lang-id">Syarat & Ketentuan</span>
+														<span class="lang-en">Terms & Conditions</span>
+													</div>
+													{coupon.expiry && (
+														<div class="tooltip-expiry">
+															<span class="lang-id">Berlaku hingga: <strong>{coupon.expiry}</strong></span>
+															<span class="lang-en">Valid until: <strong>{coupon.expiryEn || coupon.expiry}</strong></span>
+														</div>
+													)}
+													{coupon.terms && coupon.terms.length > 0 && (
+														<ul class="tooltip-terms">
+															{coupon.terms.map((term, index) => (
+																<li>
+																	<span class="lang-id">{term}</span>
+																	<span class="lang-en">{coupon.termsEn?.[index] || term}</span>
+																</li>
+															))}
+														</ul>
+													)}
+												</div>
+											</div>
+										</div>
+										<p class="coupon-desc">
+											<span class="lang-id">{coupon.desc}</span>
+											<span class="lang-en">{coupon.descEn}</span>
+										</p>
+										<div class="coupon-code-container">
+											<div class="coupon-code">{coupon.code}</div>
+											<button class="coupon-copy-btn" data-code={coupon.code} aria-label="Copy coupon code">
+												<svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+													<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+													<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+												</svg>
+												<svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="display: none;">
+													<polyline points="20 6 9 17 4 12"></polyline>
+												</svg>
+												<span class="copy-text">
+													<span class="lang-id">Salin</span>
+													<span class="lang-en">Copy</span>
+												</span>
+												<span class="copy-success-tooltip">
+													<span class="lang-id">Tersalin!</span>
+													<span class="lang-en">Copied!</span>
+												</span>
+											</button>
+										</div>
+									</div>
+								))}
+							</div>
+						) : (
+							<div class="coupon-empty-state">
+								<div class="empty-icon">
+									<svg class="empty-ticket-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="44" height="44">
+										<path d="M2 9a3 3 0 0 1 0-6h20a3 3 0 0 1 0 6 3 3 0 0 1 0 6 3 3 0 0 1 0 6H2a3 3 0 0 1 0-6 3 3 0 0 1 0-6Z" />
+										<line x1="9" y1="3" x2="9" y2="21" stroke-dasharray="3 3" />
+										<line x1="2" y1="22" x2="22" y2="2" stroke="#EF4444" stroke-width="2" style="opacity: 0.85;" />
+									</svg>
+								</div>
+								<h4 class="empty-title">
+									<span class="lang-id">Belum Ada Kupon</span>
+									<span class="lang-en">No Promo Coupons</span>
+								</h4>
+								<p class="empty-desc">
+									<span class="lang-id">Belum ada kupon promo aktif saat ini. Cek kembali nanti untuk diskon eksklusif.</span>
+									<span class="lang-en">No active promo coupons available right now. Check back later for exclusive deals.</span>
+								</p>
+							</div>
+						)}
 					</div>
 
 					<!-- COMMUNITY RATING -->
@@ -2200,6 +2927,139 @@ function formatPricePart(part: string) {
 
 				// Initial Fetch on load
 				fetchReviews();
+			});
+		</script>
+
+		<!-- JS FOR BOOKMARKS -->
+		<script define:vars={{ toolId: tool.id }}>
+			document.addEventListener('DOMContentLoaded', () => {
+				const btnBookmark = document.querySelector('.btn-bookmark');
+				if (!btnBookmark) return;
+
+				// Load saved bookmarks from localStorage
+				let bookmarks = [];
+				try {
+					bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]');
+				} catch (e) {
+					console.error('Failed to parse bookmarks', e);
+				}
+
+				// Check if current tool is bookmarked
+				if (bookmarks.includes(toolId)) {
+					btnBookmark.classList.add('active');
+				}
+
+				// Premium Toast Function
+				let toastTimeout;
+				function showToast(message) {
+					let toast = document.getElementById('neo-toast');
+					if (!toast) {
+						toast = document.createElement('div');
+						toast.id = 'neo-toast';
+						toast.style.cssText = `
+							position: fixed;
+							bottom: 30px;
+							right: 30px;
+							background: #ffffff;
+							border: 2px solid var(--color-accent);
+							box-shadow: 4px 4px 0px var(--color-accent);
+							padding: 14px 24px;
+							border-radius: 12px;
+							font-family: var(--font-body);
+							font-weight: 800;
+							font-size: 0.95rem;
+							color: var(--color-accent);
+							z-index: 9999;
+							transform: translateY(100px);
+							opacity: 0;
+							transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+							display: flex;
+							align-items: center;
+							gap: 10px;
+							pointer-events: none;
+						`;
+						document.body.appendChild(toast);
+					}
+
+					toast.innerHTML = `
+						<span style="font-size: 1.2rem;">✨</span>
+						<span>${message}</span>
+					`;
+
+					// Show toast
+					setTimeout(() => {
+						toast.style.transform = 'translateY(0)';
+						toast.style.opacity = '1';
+					}, 50);
+
+					// Hide toast after 3 seconds
+					if (toastTimeout) clearTimeout(toastTimeout);
+					toastTimeout = setTimeout(() => {
+						toast.style.transform = 'translateY(100px)';
+						toast.style.opacity = '0';
+					}, 3000);
+				}
+
+				btnBookmark.addEventListener('click', () => {
+					try {
+						bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]');
+					} catch (e) {
+						bookmarks = [];
+					}
+
+					const active = btnBookmark.classList.toggle('active');
+					const index = bookmarks.indexOf(toolId);
+
+					if (active) {
+						if (index === -1) {
+							bookmarks.push(toolId);
+						}
+					} else {
+						if (index > -1) {
+							bookmarks.splice(index, 1);
+						}
+					}
+
+					localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+
+					const isEn = document.documentElement.lang === 'en';
+					const msg = active 
+						? (isEn ? 'Tool saved to bookmarks!' : 'Alat disimpan ke bookmark!')
+						: (isEn ? 'Tool removed from bookmarks!' : 'Alat dihapus dari bookmark!');
+					showToast(msg);
+				});
+
+				// Coupon Copy Functionality
+				const copyButtons = document.querySelectorAll('.coupon-copy-btn');
+				copyButtons.forEach(btn => {
+					btn.addEventListener('click', () => {
+						const code = btn.getAttribute('data-code');
+						if (!code) return;
+
+						navigator.clipboard.writeText(code).then(() => {
+							btn.classList.add('copied');
+							const copyIcon = btn.querySelector('.copy-icon');
+							const checkIcon = btn.querySelector('.check-icon');
+							
+							if (copyIcon) copyIcon.style.display = 'none';
+							if (checkIcon) checkIcon.style.display = 'inline-block';
+
+							// Also show the toast as a nice backup notification!
+							const isEn = document.documentElement.lang === 'en';
+							const msg = isEn ? `Copied: ${code}` : `Tersalin: ${code}`;
+							showToast(msg);
+
+							// Reset after 2 seconds
+							setTimeout(() => {
+								btn.classList.remove('copied');
+								if (copyIcon) copyIcon.style.display = 'inline-block';
+								if (checkIcon) checkIcon.style.display = 'none';
+							}, 2000);
+						}).catch(err => {
+							console.error('Failed to copy text: ', err);
+						});
+					});
+				});
 			});
 		</script>
 	</body>
